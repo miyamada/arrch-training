@@ -5,8 +5,9 @@ import { useAuth } from '../contexts/AuthContext'
 import type { Employee, CurriculumItem, ProgressRecord, ProgressComment } from '../types/database'
 import { differenceInDays, parseISO, format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay } from 'date-fns'
 import { ja } from 'date-fns/locale'
-import { Star, Video, User, BookOpen, Wrench, ExternalLink, MessageSquare, ChevronLeft, ChevronRight as ChevronRightIcon, Calendar, CheckCircle } from 'lucide-react'
+import { Star, Video, User, BookOpen, Wrench, ExternalLink, MessageSquare, ChevronLeft, ChevronRight as ChevronRightIcon, Calendar, CheckCircle, FileText, Save } from 'lucide-react'
 import { Breadcrumb } from '../components/Layout'
+import type { DailyReport } from '../types/database'
 
 const TRAINER_TYPE_ICON = {
   self: <BookOpen size={13} color="#6b7280" />,
@@ -190,7 +191,11 @@ export default function EmployeeDetailPage() {
   const [items, setItems] = useState<CurriculumItem[]>([])
   const [progress, setProgress] = useState<ProgressRecord[]>([])
   const [admins, setAdmins] = useState<Employee[]>([])
-  const [activePhase, setActivePhase] = useState<number | 'calendar'>(1)
+  const [activePhase, setActivePhase] = useState<number | 'calendar' | 'reports'>(1)
+  const [reports, setReports] = useState<DailyReport[]>([])
+  const [reportForm, setReportForm] = useState({ goal_and_achievement: '', learned_today: '', tomorrow_goal: '' })
+  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [reportSaving, setReportSaving] = useState(false)
   const [openComments, setOpenComments] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
 
@@ -199,16 +204,18 @@ export default function EmployeeDetailPage() {
   useEffect(() => {
     if (!targetId) return
     async function load() {
-      const [{ data: empData }, { data: currItems }, { data: prog }, { data: adminData }] = await Promise.all([
+      const [{ data: empData }, { data: currItems }, { data: prog }, { data: adminData }, { data: reportData }] = await Promise.all([
         supabase.from('employees').select('*').eq('id', targetId!).single(),
         supabase.from('curriculum_items').select('*').order('phase').order('sort_order'),
         supabase.from('progress_records').select('*').eq('employee_id', targetId!),
         supabase.from('employees').select('*').eq('role', 'admin'),
+        supabase.from('daily_reports').select('*').eq('employee_id', targetId!).order('report_date', { ascending: false }),
       ])
       setEmp(empData)
       setItems(currItems ?? [])
       setProgress(prog ?? [])
       setAdmins(adminData ?? [])
+      setReports(reportData ?? [])
       if (empData?.mentor_id) {
         const { data: m } = await supabase.from('employees').select('*').eq('id', empData.mentor_id).single()
         setMentor(m)
@@ -248,6 +255,42 @@ export default function EmployeeDetailPage() {
       .update({ [field]: value || null })
       .eq('id', rec.id).select().single()
     if (data) setProgress(prev => prev.map(p => p.id === rec.id ? data : p))
+  }
+
+  async function saveReport() {
+    if (!targetId) return
+    setReportSaving(true)
+    const payload = {
+      employee_id: targetId,
+      report_date: selectedDate,
+      goal_and_achievement: reportForm.goal_and_achievement,
+      learned_today: reportForm.learned_today,
+      tomorrow_goal: reportForm.tomorrow_goal,
+      updated_at: new Date().toISOString(),
+    }
+    const { data } = await supabase
+      .from('daily_reports')
+      .upsert(payload, { onConflict: 'employee_id,report_date' })
+      .select().single()
+    if (data) {
+      setReports(prev => {
+        const exists = prev.findIndex(r => r.report_date === selectedDate)
+        return exists >= 0 ? prev.map((r, i) => i === exists ? data : r) : [data, ...prev]
+      })
+    }
+    setReportSaving(false)
+  }
+
+  function selectReport(r: DailyReport) {
+    setSelectedDate(r.report_date)
+    setReportForm({ goal_and_achievement: r.goal_and_achievement, learned_today: r.learned_today, tomorrow_goal: r.tomorrow_goal })
+  }
+
+  // 選択日付が変わったとき既存の日報をロード
+  function onDateChange(date: string) {
+    setSelectedDate(date)
+    const existing = reports.find(r => r.report_date === date)
+    setReportForm(existing ? { goal_and_achievement: existing.goal_and_achievement, learned_today: existing.learned_today, tomorrow_goal: existing.tomorrow_goal } : { goal_and_achievement: '', learned_today: '', tomorrow_goal: '' })
   }
 
   function toggleComment(recId: string) {
@@ -341,12 +384,100 @@ export default function EmployeeDetailPage() {
         }}>
           <Calendar size={13} /> カレンダー
         </button>
+        <button onClick={() => setActivePhase('reports')} style={{
+          padding: '8px 16px', fontSize: '12px', whiteSpace: 'nowrap',
+          color: activePhase === 'reports' ? '#c8a96a' : '#6b7280',
+          background: 'none', border: 'none',
+          borderBottom: activePhase === 'reports' ? '2px solid #c8a96a' : '2px solid transparent',
+          cursor: 'pointer', marginBottom: '-1px',
+          display: 'flex', alignItems: 'center', gap: '5px',
+        }}>
+          <FileText size={13} /> 日報
+          {reports.length > 0 && <span style={{ fontSize: '10px', background: '#c8a96a', color: '#fff', borderRadius: '8px', padding: '0 5px' }}>{reports.length}</span>}
+        </button>
       </div>
 
       {/* カレンダービュー */}
       {activePhase === 'calendar' && (
         <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '24px' }}>
           <CalendarView items={items} progress={progress} />
+        </div>
+      )}
+
+      {/* 日報ビュー */}
+      {activePhase === 'reports' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '20px' }}>
+          {/* 左: 日報一覧 */}
+          <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', overflow: 'hidden' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', fontSize: '11px', color: '#9ca3af', fontWeight: 600 }}>過去の日報</div>
+            {reports.length === 0 ? (
+              <div style={{ padding: '16px', fontSize: '11px', color: '#9ca3af', textAlign: 'center' }}>まだ日報がありません</div>
+            ) : (
+              reports.map(r => (
+                <button key={r.id} onClick={() => selectReport(r)} style={{
+                  width: '100%', padding: '10px 16px', textAlign: 'left',
+                  background: r.report_date === selectedDate ? 'rgba(200,169,106,0.08)' : 'transparent',
+                  border: 'none', borderBottom: '1px solid #f0f2f5',
+                  borderLeft: r.report_date === selectedDate ? '2px solid #c8a96a' : '2px solid transparent',
+                  cursor: 'pointer',
+                }}>
+                  <div style={{ fontSize: '12px', color: '#111827', fontWeight: r.report_date === selectedDate ? 600 : 400 }}>
+                    {format(parseISO(r.report_date), 'M月d日(EEE)', { locale: ja })}
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {r.goal_and_achievement.slice(0, 20) || '—'}
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+
+          {/* 右: 日報入力/表示 */}
+          <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={e => onDateChange(e.target.value)}
+                disabled={!isAdmin && me?.id !== targetId}
+                style={{ fontSize: '13px', fontWeight: 600, color: '#111827', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '6px 10px', background: '#f7f8fa' }}
+              />
+              {(isAdmin || me?.id === targetId) && (
+                <button onClick={saveReport} disabled={reportSaving} style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '8px 16px', background: reportSaving ? '#f0f2f5' : '#c8a96a',
+                  color: reportSaving ? '#9ca3af' : '#ffffff', border: 'none', borderRadius: '4px',
+                  fontSize: '12px', fontWeight: 600, cursor: reportSaving ? 'not-allowed' : 'pointer',
+                }}>
+                  <Save size={13} />{reportSaving ? '保存中...' : '保存'}
+                </button>
+              )}
+            </div>
+
+            {[
+              { key: 'goal_and_achievement', label: '今日の目標とそれに対しての取り組みと達成度合' },
+              { key: 'learned_today', label: '今日学んだこと' },
+              { key: 'tomorrow_goal', label: '明日の目標とそれに対してどう行動していくか' },
+            ].map(({ key, label }) => (
+              <div key={key} style={{ marginBottom: '20px' }}>
+                <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600, marginBottom: '8px' }}>【{label}】</div>
+                <textarea
+                  value={reportForm[key as keyof typeof reportForm]}
+                  onChange={e => setReportForm(f => ({ ...f, [key]: e.target.value }))}
+                  readOnly={!isAdmin && me?.id !== targetId}
+                  rows={4}
+                  placeholder={isAdmin || me?.id === targetId ? '入力してください' : '—'}
+                  style={{
+                    width: '100%', padding: '10px 12px',
+                    background: '#f7f8fa', border: '1px solid #e5e7eb', borderRadius: '4px',
+                    color: '#111827', fontSize: '13px', resize: 'vertical',
+                    fontFamily: 'inherit', lineHeight: 1.6,
+                    cursor: (!isAdmin && me?.id !== targetId) ? 'default' : 'text',
+                  }}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

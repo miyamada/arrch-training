@@ -117,6 +117,34 @@ export interface Database {
           created_at?: string
         }
       }
+      daily_reports: {
+        Row: {
+          id: string
+          employee_id: string
+          report_date: string
+          goal_and_achievement: string
+          learned_today: string
+          tomorrow_goal: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          employee_id: string
+          report_date: string
+          goal_and_achievement?: string
+          learned_today?: string
+          tomorrow_goal?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          goal_and_achievement?: string
+          learned_today?: string
+          tomorrow_goal?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }
@@ -125,6 +153,7 @@ export interface Database {
 export type Employee = Database['public']['Tables']['employees']['Row']
 export type CurriculumItem = Database['public']['Tables']['curriculum_items']['Row']
 export type ProgressRecord = Database['public']['Tables']['progress_records']['Row']
+export type DailyReport = Database['public']['Tables']['daily_reports']['Row']
 
 export interface ProgressComment {
   id: string
