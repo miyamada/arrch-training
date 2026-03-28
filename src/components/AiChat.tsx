@@ -115,7 +115,11 @@ export default function AiChat({ emp, items, progress, reports, open: openProp, 
       setMessages(prev => [...prev, { role: 'model', text }])
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
-      setMessages(prev => [...prev, { role: 'model', text: `エラー: ${msg}` }])
+      const isQuota = msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('retry')
+      const userMsg = isQuota
+        ? 'リクエストが集中しています。数秒待ってから再度お試しください。'
+        : 'エラーが発生しました。もう一度お試しください。'
+      setMessages(prev => [...prev, { role: 'model', text: userMsg }])
     }
     setLoading(false)
   }
