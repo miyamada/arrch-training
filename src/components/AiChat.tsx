@@ -87,7 +87,7 @@ export default function AiChat({ emp, items, progress, reports, open: openProp, 
   useEffect(() => {
     if (!open || chatSession) return
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash',
       systemInstruction: buildSystemContext(emp, items, progress, reports),
     })
     const session = model.startChat({ history: [] })
