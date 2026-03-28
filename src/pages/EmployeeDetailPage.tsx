@@ -7,6 +7,7 @@ import { differenceInDays, parseISO, format, startOfMonth, endOfMonth, eachDayOf
 import { ja } from 'date-fns/locale'
 import { Star, Video, User, BookOpen, Wrench, ExternalLink, MessageSquare, ChevronLeft, ChevronRight as ChevronRightIcon, Calendar, CheckCircle, FileText, Save } from 'lucide-react'
 import { Breadcrumb } from '../components/Layout'
+import AiChat from '../components/AiChat'
 import type { DailyReport } from '../types/database'
 
 const TRAINER_TYPE_ICON = {
@@ -593,6 +594,11 @@ export default function EmployeeDetailPage() {
             )
           })}
         </div>
+      )}
+
+      {/* AI相談ボタン（管理者のみ） */}
+      {isAdmin && (
+        <AiChat emp={emp} items={items} progress={progress} reports={reports} />
       )}
     </div>
   )
