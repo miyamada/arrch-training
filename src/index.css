@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+:root {
+  --bg:          #f7f8fa;
+  --bg-card:     #ffffff;
+  --bg-hover:    #f0f2f5;
+  --border:      #e5e7eb;
+  --gold:        #c8a96a;
+  --gold-dim:    rgba(200, 169, 106, 0.12);
+  --text:        #111827;
+  --text-sub:    #6b7280;
+  --text-dim:    #9ca3af;
+  --danger:      #e05454;
+  --danger-bg:   rgba(224, 84, 84, 0.07);
+  --success:     #4a9e5c;
+  --success-bg:  rgba(74, 158, 92, 0.07);
+  --warn:        #e0a854;
+  --warn-bg:     rgba(224, 168, 84, 0.07);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans JP', 'Inter', sans-serif;
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* スクロールバーのカスタマイズ */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+}
