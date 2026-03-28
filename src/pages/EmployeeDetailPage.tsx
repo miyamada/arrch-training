@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import type { Employee, CurriculumItem, ProgressRecord, ProgressComment } from '../types/database'
 import { differenceInDays, parseISO, format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay } from 'date-fns'
 import { ja } from 'date-fns/locale'
-import { Star, Video, User, BookOpen, Wrench, ExternalLink, MessageSquare, ChevronLeft, ChevronRight as ChevronRightIcon, Calendar } from 'lucide-react'
+import { Star, Video, User, BookOpen, Wrench, ExternalLink, MessageSquare, ChevronLeft, ChevronRight as ChevronRightIcon, Calendar, CheckCircle } from 'lucide-react'
 import { Breadcrumb } from '../components/Layout'
 
 const TRAINER_TYPE_ICON = {
@@ -91,10 +91,7 @@ function CommentPanel({ record, authorId, isAdmin }: {
           <button
             onClick={addComment}
             disabled={saving || !text.trim()}
-            style={{
-              padding: '5px 12px', fontSize: '11px', background: '#c8a96a', color: '#fff',
-              border: 'none', borderRadius: '4px', cursor: 'pointer',
-            }}
+            style={{ padding: '5px 12px', fontSize: '11px', background: '#c8a96a', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
           >送信</button>
         </div>
       )}
@@ -109,9 +106,8 @@ function CalendarView({ items, progress }: { items: CurriculumItem[], progress: 
   const monthStart = startOfMonth(current)
   const monthEnd = endOfMonth(current)
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd })
-  const startDow = getDay(monthStart) // 0=Sun
+  const startDow = getDay(monthStart)
 
-  // planned_date ごとにアイテムをマッピング
   const byDate: Record<string, { item: CurriculumItem; rec: ProgressRecord }[]> = {}
   for (const rec of progress) {
     if (!rec.planned_date) continue
@@ -125,7 +121,6 @@ function CalendarView({ items, progress }: { items: CurriculumItem[], progress: 
 
   return (
     <div>
-      {/* ヘッダー */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
         <button onClick={() => setCurrent(d => new Date(d.getFullYear(), d.getMonth() - 1, 1))}
           style={{ background: 'none', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', color: '#6b7280' }}>
@@ -139,17 +134,12 @@ function CalendarView({ items, progress }: { items: CurriculumItem[], progress: 
           <ChevronRightIcon size={14} />
         </button>
       </div>
-
-      {/* 曜日ヘッダー */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '2px' }}>
         {DOW.map((d, i) => (
           <div key={d} style={{ textAlign: 'center', fontSize: '10px', color: i === 0 ? '#e05454' : i === 6 ? '#5a8faa' : '#9ca3af', padding: '4px' }}>{d}</div>
         ))}
       </div>
-
-      {/* 日付グリッド */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
-        {/* 月初の空白 */}
         {Array.from({ length: startDow }).map((_, i) => (
           <div key={`empty-${i}`} style={{ minHeight: '64px' }} />
         ))}
@@ -169,15 +159,10 @@ function CalendarView({ items, progress }: { items: CurriculumItem[], progress: 
               </div>
               {entries.slice(0, 2).map(({ item, rec }) => (
                 <div key={item.id} style={{
-                  fontSize: '9px',
-                  padding: '1px 4px',
-                  borderRadius: '2px',
-                  marginBottom: '1px',
+                  fontSize: '9px', padding: '1px 4px', borderRadius: '2px', marginBottom: '1px',
                   background: rec.is_completed ? 'rgba(74,158,92,0.12)' : 'rgba(200,169,106,0.12)',
                   color: rec.is_completed ? '#4a9e5c' : '#b8941a',
-                  overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                  textOverflow: 'ellipsis',
+                  overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
                 }}>
                   {item.content.slice(0, 12)}…
                 </div>
@@ -204,6 +189,7 @@ export default function EmployeeDetailPage() {
   const [mentor, setMentor] = useState<Employee | null>(null)
   const [items, setItems] = useState<CurriculumItem[]>([])
   const [progress, setProgress] = useState<ProgressRecord[]>([])
+  const [admins, setAdmins] = useState<Employee[]>([])
   const [activePhase, setActivePhase] = useState<number | 'calendar'>(1)
   const [openComments, setOpenComments] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
@@ -213,14 +199,16 @@ export default function EmployeeDetailPage() {
   useEffect(() => {
     if (!targetId) return
     async function load() {
-      const [{ data: empData }, { data: currItems }, { data: prog }] = await Promise.all([
+      const [{ data: empData }, { data: currItems }, { data: prog }, { data: adminData }] = await Promise.all([
         supabase.from('employees').select('*').eq('id', targetId!).single(),
         supabase.from('curriculum_items').select('*').order('phase').order('sort_order'),
         supabase.from('progress_records').select('*').eq('employee_id', targetId!),
+        supabase.from('employees').select('*').eq('role', 'admin'),
       ])
       setEmp(empData)
       setItems(currItems ?? [])
       setProgress(prog ?? [])
+      setAdmins(adminData ?? [])
       if (empData?.mentor_id) {
         const { data: m } = await supabase.from('employees').select('*').eq('id', empData.mentor_id).single()
         setMentor(m)
@@ -237,6 +225,17 @@ export default function EmployeeDetailPage() {
     const { data } = await supabase
       .from('progress_records')
       .update({ is_completed: nowCompleted, completed_at: nowCompleted ? new Date().toISOString() : null })
+      .eq('id', rec.id).select().single()
+    if (data) setProgress(prev => prev.map(p => p.id === rec.id ? data : p))
+  }
+
+  async function toggleTestPassed(itemId: string) {
+    const rec = progress.find(p => p.item_id === itemId)
+    if (!rec || !isAdmin) return
+    const nowPassed = !rec.is_test_passed
+    const { data } = await supabase
+      .from('progress_records')
+      .update({ is_test_passed: nowPassed })
       .eq('id', rec.id).select().single()
     if (data) setProgress(prev => prev.map(p => p.id === rec.id ? data : p))
   }
@@ -275,12 +274,12 @@ export default function EmployeeDetailPage() {
   const phaseItems = typeof activePhase === 'number' ? items.filter(i => i.phase === activePhase) : []
 
   return (
-    <div style={{ padding: '40px' }}>
+    <div style={{ padding: '24px 40px' }}>
       <Breadcrumb items={[{ label: 'ダッシュボード', to: '/' }, { label: emp.name }]} />
 
       {/* ヘッダー */}
-      <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '28px 32px', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '24px 28px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <h1 style={{ fontSize: '22px', fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>{emp.name}</h1>
             <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>
@@ -318,24 +317,22 @@ export default function EmployeeDetailPage() {
         </div>
       </div>
 
-      {/* タブ（フェーズ1〜4 + カレンダー） */}
-      <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', borderBottom: '1px solid #e5e7eb' }}>
+      {/* タブ */}
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', borderBottom: '1px solid #e5e7eb', overflowX: 'auto' }}>
         {([1, 2, 3, 4] as const).map(ph => (
           <button key={ph} onClick={() => setActivePhase(ph)} style={{
-            padding: '8px 20px', fontSize: '12px',
+            padding: '8px 16px', fontSize: '12px', whiteSpace: 'nowrap',
             color: activePhase === ph ? '#c8a96a' : '#6b7280',
             background: 'none', border: 'none',
             borderBottom: activePhase === ph ? '2px solid #c8a96a' : '2px solid transparent',
             cursor: 'pointer', marginBottom: '-1px',
           }}>
             フェーズ{ph}
-            <span style={{ fontSize: '10px', marginLeft: '4px', color: '#9ca3af' }}>
-              {PHASE_NAMES[ph]}
-            </span>
+            <span style={{ fontSize: '10px', marginLeft: '4px', color: '#9ca3af' }}>{PHASE_NAMES[ph]}</span>
           </button>
         ))}
         <button onClick={() => setActivePhase('calendar')} style={{
-          padding: '8px 20px', fontSize: '12px',
+          padding: '8px 16px', fontSize: '12px', whiteSpace: 'nowrap',
           color: activePhase === 'calendar' ? '#c8a96a' : '#6b7280',
           background: 'none', border: 'none',
           borderBottom: activePhase === 'calendar' ? '2px solid #c8a96a' : '2px solid transparent',
@@ -359,6 +356,7 @@ export default function EmployeeDetailPage() {
           {phaseItems.map((item, idx) => {
             const rec = progress.find(p => p.item_id === item.id)
             const isCompleted = rec?.is_completed ?? false
+            const isTestPassed = rec?.is_test_passed ?? false
             const delayDays = rec && !isCompleted && rec.planned_date
               ? differenceInDays(today, parseISO(rec.planned_date))
               : 0
@@ -374,7 +372,7 @@ export default function EmployeeDetailPage() {
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                   <input type="checkbox" checked={isCompleted} onChange={() => toggleComplete(item.id)}
                     style={{ marginTop: '2px', cursor: 'pointer', accentColor: '#c8a96a' }} />
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '6px' }}>
                       {item.is_required_test && <Star size={13} color="#c8a96a" fill="#c8a96a" />}
                       <span style={{ fontSize: '13px', color: isCompleted ? '#9ca3af' : '#111827', textDecoration: isCompleted ? 'line-through' : 'none' }}>
@@ -393,6 +391,28 @@ export default function EmployeeDetailPage() {
                       {isCompleted && rec?.completed_at && (
                         <span style={{ fontSize: '11px', color: '#4a9e5c' }}>✓ {format(parseISO(rec.completed_at), 'M/d')} 完了</span>
                       )}
+                      {/* 社内検定 合格承認ボタン（管理者のみ） */}
+                      {item.is_required_test && isAdmin && (
+                        <button
+                          onClick={() => toggleTestPassed(item.id)}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '4px',
+                            padding: '3px 10px', fontSize: '11px', fontWeight: 600,
+                            border: 'none', borderRadius: '3px', cursor: 'pointer',
+                            background: isTestPassed ? 'rgba(74,158,92,0.12)' : 'rgba(200,169,106,0.12)',
+                            color: isTestPassed ? '#4a9e5c' : '#c8a96a',
+                          }}
+                        >
+                          <CheckCircle size={12} />
+                          {isTestPassed ? '合格済み' : '合格承認'}
+                        </button>
+                      )}
+                      {/* traineeには合格状態を表示のみ */}
+                      {item.is_required_test && !isAdmin && isTestPassed && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#4a9e5c', fontWeight: 600 }}>
+                          <CheckCircle size={12} /> 合格済み
+                        </span>
+                      )}
                     </div>
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '8px' }}>
@@ -404,13 +424,23 @@ export default function EmployeeDetailPage() {
                       </label>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#9ca3af' }}>
                         担当者:
-                        <input type="text" disabled={!isAdmin} value={rec?.trainer_name ?? ''} onChange={e => updateField(item.id, 'trainer_name', e.target.value)} placeholder="名前を入力"
-                          style={{ background: '#f7f8fa', border: '1px solid #e5e7eb', borderRadius: '2px', color: '#6b7280', fontSize: '11px', padding: '2px 6px', width: '100px', cursor: isAdmin ? 'text' : 'not-allowed', opacity: isAdmin ? 1 : 0.6 }} />
+                        {isAdmin ? (
+                          <select
+                            value={rec?.trainer_name ?? ''}
+                            onChange={e => updateField(item.id, 'trainer_name', e.target.value)}
+                            style={{ background: '#f7f8fa', border: '1px solid #e5e7eb', borderRadius: '2px', color: '#6b7280', fontSize: '11px', padding: '2px 6px', minWidth: '100px' }}
+                          >
+                            <option value="">未設定</option>
+                            {admins.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
+                          </select>
+                        ) : (
+                          <span style={{ fontSize: '11px', color: '#6b7280' }}>{rec?.trainer_name ?? '—'}</span>
+                        )}
                       </label>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#9ca3af' }}>
                         メモ:
                         <input type="text" disabled={!isAdmin} value={rec?.memo ?? ''} onChange={e => updateField(item.id, 'memo', e.target.value)} placeholder="メモ"
-                          style={{ background: '#f7f8fa', border: '1px solid #e5e7eb', borderRadius: '2px', color: '#6b7280', fontSize: '11px', padding: '2px 6px', width: '180px', cursor: isAdmin ? 'text' : 'not-allowed', opacity: isAdmin ? 1 : 0.6 }} />
+                          style={{ background: '#f7f8fa', border: '1px solid #e5e7eb', borderRadius: '2px', color: '#6b7280', fontSize: '11px', padding: '2px 6px', width: '160px', cursor: isAdmin ? 'text' : 'not-allowed', opacity: isAdmin ? 1 : 0.6 }} />
                       </label>
                       {rec && (
                         <button onClick={() => toggleComment(rec.id)} style={{
@@ -418,13 +448,11 @@ export default function EmployeeDetailPage() {
                           background: 'none', border: 'none', cursor: 'pointer',
                           fontSize: '11px', color: showComment ? '#c8a96a' : '#9ca3af', padding: 0,
                         }}>
-                          <MessageSquare size={12} />
-                          コメント
+                          <MessageSquare size={12} />コメント
                         </button>
                       )}
                     </div>
 
-                    {/* コメントパネル */}
                     {rec && showComment && (
                       <CommentPanel record={rec} authorId={me!.id} isAdmin={isAdmin} />
                     )}

@@ -89,6 +89,7 @@ export interface Database {
           planned_date: string | null
           trainer_name: string | null
           memo: string | null
+          is_test_passed: boolean
           created_at: string
         }
         Insert: {
@@ -100,6 +101,7 @@ export interface Database {
           planned_date?: string | null
           trainer_name?: string | null
           memo?: string | null
+          is_test_passed?: boolean
           created_at?: string
         }
         Update: {
@@ -111,6 +113,7 @@ export interface Database {
           planned_date?: string | null
           trainer_name?: string | null
           memo?: string | null
+          is_test_passed?: boolean
           created_at?: string
         }
       }
