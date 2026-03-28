@@ -69,8 +69,14 @@ ${recentReports || '日報なし'}
 export default function AiChat({ emp, items, progress, reports, open: openProp, onClose }: Props) {
   const [openInternal, setOpenInternal] = useState(false)
   const isControlled = openProp !== undefined
-  const open = isControlled ? openProp : openInternal
-  const setOpen = isControlled ? (v: boolean) => { if (!v && onClose) onClose() } : setOpenInternal
+  const open = isControlled ? openProp! : openInternal
+
+  function handleOpen() {
+    if (!isControlled) setOpenInternal(true)
+  }
+  function handleClose() {
+    if (isControlled) { onClose?.() } else { setOpenInternal(false) }
+  }
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -118,7 +124,7 @@ export default function AiChat({ emp, items, progress, reports, open: openProp, 
       {/* 外部制御でない場合のみフローティングボタンを表示 */}
       {!isControlled && (
         <button
-          onClick={() => setOpen(true)}
+          onClick={handleOpen}
           style={{
             position: 'fixed', bottom: '24px', right: '24px', zIndex: 100,
             display: 'flex', alignItems: 'center', gap: '8px',
@@ -151,7 +157,7 @@ export default function AiChat({ emp, items, progress, reports, open: openProp, 
               <Bot size={16} color="#c8a96a" />
               <span style={{ fontSize: '13px', fontWeight: 600, color: '#111827' }}>AI相談 — {emp.name}</span>
             </div>
-            <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', display: 'flex' }}>
+            <button onClick={handleClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', display: 'flex' }}>
               <X size={16} />
             </button>
           </div>
