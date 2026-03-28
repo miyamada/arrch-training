@@ -113,8 +113,9 @@ export default function AiChat({ emp, items, progress, reports, open: openProp, 
       const result = await chatSession.sendMessage(userText)
       const text = result.response.text()
       setMessages(prev => [...prev, { role: 'model', text }])
-    } catch {
-      setMessages(prev => [...prev, { role: 'model', text: 'エラーが発生しました。もう一度お試しください。' }])
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      setMessages(prev => [...prev, { role: 'model', text: `エラー: ${msg}` }])
     }
     setLoading(false)
   }
