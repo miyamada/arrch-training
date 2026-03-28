@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { Bot, X, Send, Loader } from 'lucide-react'
 import type { Employee, CurriculumItem, ProgressRecord, DailyReport } from '../types/database'
-import { format, parseISO, differenceInDays } from 'date-fns'
+import { parseISO, differenceInDays } from 'date-fns'
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY ?? '')
 
@@ -140,8 +140,13 @@ export default function AiChat({ emp, items, progress, reports, open: openProp, 
       {/* チャットパネル */}
       {open && (
         <div style={{
-          position: 'fixed', bottom: '80px', right: '24px', zIndex: 100,
-          width: '380px', height: '520px',
+          position: 'fixed',
+          bottom: '16px',
+          right: '16px',
+          left: window.innerWidth < 768 ? '16px' : 'auto',
+          zIndex: 100,
+          width: window.innerWidth < 768 ? 'auto' : '380px',
+          height: '520px',
           background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px',
           boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
           display: 'flex', flexDirection: 'column',

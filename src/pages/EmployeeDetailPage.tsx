@@ -199,7 +199,14 @@ export default function EmployeeDetailPage() {
   const [reportSaving, setReportSaving] = useState(false)
   const [openComments, setOpenComments] = useState<Set<string>>(new Set())
   const [aiChatOpen, setAiChatOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    function onResize() { setIsMobile(window.innerWidth < 768) }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   const targetId = id ?? me?.id
 
@@ -319,7 +326,7 @@ export default function EmployeeDetailPage() {
   const phaseItems = typeof activePhase === 'number' ? items.filter(i => i.phase === activePhase) : []
 
   return (
-    <div style={{ padding: '24px 40px' }}>
+    <div style={{ padding: isMobile ? '16px' : '24px 40px' }}>
       <Breadcrumb items={[{ label: 'ダッシュボード', to: '/' }, { label: emp.name }]} />
 
       {/* ヘッダー */}
@@ -358,7 +365,7 @@ export default function EmployeeDetailPage() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginTop: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: '12px', marginTop: '20px' }}>
           {phaseStats.map(({ phase, total: t, completed: c }) => {
             const r = t > 0 ? Math.round((c / t) * 100) : 0
             const colors = ['', '#c8a96a', '#4a9e5c', '#5a8faa', '#aa5a8f']
@@ -450,7 +457,7 @@ export default function EmployeeDetailPage() {
 
       {/* 日報ビュー */}
       {activePhase === 'reports' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '200px 1fr', gap: '16px' }}>
           {/* 左: 日報一覧 */}
           <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', overflow: 'hidden' }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', fontSize: '11px', color: '#9ca3af', fontWeight: 600 }}>過去の日報</div>
@@ -590,7 +597,7 @@ export default function EmployeeDetailPage() {
                       )}
                     </div>
 
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '8px' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: isMobile ? '8px' : '12px', marginTop: '8px' }}>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#9ca3af' }}>
                         予定日:
                         <input type="date" disabled={!isAdmin} value={rec?.planned_date ?? ''}

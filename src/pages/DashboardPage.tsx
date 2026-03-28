@@ -51,7 +51,14 @@ export default function DashboardPage() {
   const [items, setItems] = useState<CurriculumItem[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'delayed' | 1 | 2 | 3 | 4>('all')
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const today = new Date()
+
+  useEffect(() => {
+    function onResize() { setIsMobile(window.innerWidth < 768) }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -102,11 +109,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div style={{ padding: '40px' }}>
+    <div style={{ padding: isMobile ? '16px' : '40px' }}>
       <Breadcrumb items={[{ label: 'ダッシュボード' }]} />
 
       {/* KPI カード */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
         {[
           { label: '在籍研修者数', value: `${employees.length}名`, icon: Users, color: '#c8a96a' },
           { label: '平均進捗率', value: `${avgRate}%`, icon: TrendingUp, color: '#4a9e5c' },
@@ -160,7 +167,7 @@ export default function DashboardPage() {
 
       {/* 進捗グラフ */}
       {statsRows.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
           {/* 社員別進捗率 */}
           <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '20px 24px' }}>
             <div style={{ fontSize: '11px', color: '#6b7280', letterSpacing: '0.08em', marginBottom: '16px' }}>社員別進捗率</div>
@@ -206,7 +213,7 @@ export default function DashboardPage() {
       )}
 
       {/* フィルタータブ */}
-      <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', borderBottom: '1px solid #e5e7eb', paddingBottom: '0' }}>
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', borderBottom: '1px solid #e5e7eb', paddingBottom: '0', overflowX: 'auto' }}>
         {(['all', 'delayed', 1, 2, 3, 4] as const).map(f => {
           const label = f === 'all' ? 'すべて' : f === 'delayed' ? '遅延のみ' : `フェーズ${f}`
           const isActive = filter === f
@@ -239,7 +246,8 @@ export default function DashboardPage() {
         borderRadius: '4px',
         overflow: 'hidden',
       }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+        <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: isMobile ? '600px' : 'unset' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid #e5e7eb', background: '#f7f8fa' }}>
               {['社員名', '入社経過', '現在フェーズ', '進捗', 'スケジュール', '担当メンター', ''].map(h => (
@@ -369,6 +377,7 @@ export default function DashboardPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )
