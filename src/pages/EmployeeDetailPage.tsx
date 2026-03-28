@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import type { Employee, CurriculumItem, ProgressRecord, ProgressComment } from '../types/database'
 import { differenceInDays, parseISO, format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay } from 'date-fns'
 import { ja } from 'date-fns/locale'
-import { Star, Video, User, BookOpen, Wrench, ExternalLink, MessageSquare, ChevronLeft, ChevronRight as ChevronRightIcon, Calendar, CheckCircle, FileText, Save } from 'lucide-react'
+import { Star, Video, User, BookOpen, Wrench, ExternalLink, MessageSquare, ChevronLeft, ChevronRight as ChevronRightIcon, Calendar, CheckCircle, FileText, Save, Bot } from 'lucide-react'
 import { Breadcrumb } from '../components/Layout'
 import AiChat from '../components/AiChat'
 import type { DailyReport } from '../types/database'
@@ -198,6 +198,7 @@ export default function EmployeeDetailPage() {
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [reportSaving, setReportSaving] = useState(false)
   const [openComments, setOpenComments] = useState<Set<string>>(new Set())
+  const [aiChatOpen, setAiChatOpen] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const targetId = id ?? me?.id
@@ -335,9 +336,25 @@ export default function EmployeeDetailPage() {
               </div>
             )}
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '48px', fontWeight: 700, color: '#c8a96a', lineHeight: 1 }}>{rate}%</div>
-            <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>{completed}/{total} 項目完了</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '48px', fontWeight: 700, color: '#c8a96a', lineHeight: 1 }}>{rate}%</div>
+              <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>{completed}/{total} 項目完了</div>
+            </div>
+            {isAdmin && (
+              <button
+                onClick={() => setAiChatOpen(true)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  padding: '10px 18px', background: '#c8a96a', color: '#ffffff',
+                  border: 'none', borderRadius: '24px', fontSize: '13px', fontWeight: 600,
+                  cursor: 'pointer', boxShadow: '0 2px 10px rgba(200,169,106,0.35)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <Bot size={15} /> AI に相談
+              </button>
+            )}
           </div>
         </div>
 
@@ -362,39 +379,65 @@ export default function EmployeeDetailPage() {
       </div>
 
       {/* タブ */}
-      <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', borderBottom: '1px solid #e5e7eb', overflowX: 'auto' }}>
-        {([1, 2, 3, 4] as const).map(ph => (
-          <button key={ph} onClick={() => setActivePhase(ph)} style={{
-            padding: '8px 16px', fontSize: '12px', whiteSpace: 'nowrap',
-            color: activePhase === ph ? '#c8a96a' : '#6b7280',
-            background: 'none', border: 'none',
-            borderBottom: activePhase === ph ? '2px solid #c8a96a' : '2px solid transparent',
-            cursor: 'pointer', marginBottom: '-1px',
-          }}>
-            フェーズ{ph}
-            <span style={{ fontSize: '10px', marginLeft: '4px', color: '#9ca3af' }}>{PHASE_NAMES[ph]}</span>
-          </button>
-        ))}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '2px' }}>
+        {([1, 2, 3, 4] as const).map(ph => {
+          const isActive = activePhase === ph
+          const phStat = phaseStats.find(s => s.phase === ph)
+          return (
+            <button key={ph} onClick={() => setActivePhase(ph)} style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              padding: '10px 18px', fontSize: '13px', fontWeight: isActive ? 700 : 400,
+              whiteSpace: 'nowrap', cursor: 'pointer',
+              background: isActive ? '#c8a96a' : '#ffffff',
+              color: isActive ? '#ffffff' : '#6b7280',
+              border: isActive ? '1px solid #c8a96a' : '1px solid #e5e7eb',
+              borderRadius: '8px',
+              boxShadow: isActive ? '0 2px 8px rgba(200,169,106,0.3)' : 'none',
+              transition: 'all 0.15s',
+              minWidth: '80px',
+            }}>
+              <span>フェーズ{ph}</span>
+              <span style={{ fontSize: '10px', marginTop: '2px', opacity: 0.75 }}>{PHASE_NAMES[ph]}</span>
+              {phStat && (
+                <span style={{ fontSize: '10px', marginTop: '4px', opacity: 0.85 }}>{phStat.completed}/{phStat.total}</span>
+              )}
+            </button>
+          )
+        })}
         <button onClick={() => setActivePhase('calendar')} style={{
-          padding: '8px 16px', fontSize: '12px', whiteSpace: 'nowrap',
-          color: activePhase === 'calendar' ? '#c8a96a' : '#6b7280',
-          background: 'none', border: 'none',
-          borderBottom: activePhase === 'calendar' ? '2px solid #c8a96a' : '2px solid transparent',
-          cursor: 'pointer', marginBottom: '-1px',
-          display: 'flex', alignItems: 'center', gap: '5px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: '10px 18px', fontSize: '13px', fontWeight: activePhase === 'calendar' ? 700 : 400,
+          whiteSpace: 'nowrap', cursor: 'pointer',
+          background: activePhase === 'calendar' ? '#c8a96a' : '#ffffff',
+          color: activePhase === 'calendar' ? '#ffffff' : '#6b7280',
+          border: activePhase === 'calendar' ? '1px solid #c8a96a' : '1px solid #e5e7eb',
+          borderRadius: '8px',
+          boxShadow: activePhase === 'calendar' ? '0 2px 8px rgba(200,169,106,0.3)' : 'none',
+          transition: 'all 0.15s', gap: '4px', minWidth: '80px',
         }}>
-          <Calendar size={13} /> カレンダー
+          <Calendar size={15} />
+          <span style={{ fontSize: '11px', marginTop: '2px' }}>カレンダー</span>
         </button>
         <button onClick={() => setActivePhase('reports')} style={{
-          padding: '8px 16px', fontSize: '12px', whiteSpace: 'nowrap',
-          color: activePhase === 'reports' ? '#c8a96a' : '#6b7280',
-          background: 'none', border: 'none',
-          borderBottom: activePhase === 'reports' ? '2px solid #c8a96a' : '2px solid transparent',
-          cursor: 'pointer', marginBottom: '-1px',
-          display: 'flex', alignItems: 'center', gap: '5px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: '10px 18px', fontSize: '13px', fontWeight: activePhase === 'reports' ? 700 : 400,
+          whiteSpace: 'nowrap', cursor: 'pointer',
+          background: activePhase === 'reports' ? '#c8a96a' : '#ffffff',
+          color: activePhase === 'reports' ? '#ffffff' : '#6b7280',
+          border: activePhase === 'reports' ? '1px solid #c8a96a' : '1px solid #e5e7eb',
+          borderRadius: '8px',
+          boxShadow: activePhase === 'reports' ? '0 2px 8px rgba(200,169,106,0.3)' : 'none',
+          transition: 'all 0.15s', gap: '4px', minWidth: '80px', position: 'relative',
         }}>
-          <FileText size={13} /> 日報
-          {reports.length > 0 && <span style={{ fontSize: '10px', background: '#c8a96a', color: '#fff', borderRadius: '8px', padding: '0 5px' }}>{reports.length}</span>}
+          <FileText size={15} />
+          <span style={{ fontSize: '11px', marginTop: '2px' }}>日報</span>
+          {reports.length > 0 && (
+            <span style={{
+              position: 'absolute', top: '6px', right: '6px',
+              fontSize: '10px', background: activePhase === 'reports' ? 'rgba(255,255,255,0.4)' : '#c8a96a',
+              color: '#fff', borderRadius: '8px', padding: '0 5px', lineHeight: '16px',
+            }}>{reports.length}</span>
+          )}
         </button>
       </div>
 
@@ -596,9 +639,9 @@ export default function EmployeeDetailPage() {
         </div>
       )}
 
-      {/* AI相談ボタン（管理者のみ） */}
+      {/* AIチャットパネル（管理者のみ） */}
       {isAdmin && (
-        <AiChat emp={emp} items={items} progress={progress} reports={reports} />
+        <AiChat emp={emp} items={items} progress={progress} reports={reports} open={aiChatOpen} onClose={() => setAiChatOpen(false)} />
       )}
     </div>
   )

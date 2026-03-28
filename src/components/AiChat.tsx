@@ -16,6 +16,9 @@ interface Props {
   items: CurriculumItem[]
   progress: ProgressRecord[]
   reports: DailyReport[]
+  /** 外部から開閉を制御する場合に渡す */
+  open?: boolean
+  onClose?: () => void
 }
 
 function buildSystemContext(emp: Employee, items: CurriculumItem[], progress: ProgressRecord[], reports: DailyReport[]): string {
@@ -63,8 +66,11 @@ ${recentReports || '日報なし'}
 管理者の質問に日本語で回答してください。進捗データや日報の内容から、精神状態・モチベーション・つまずきポイントなどの傾向を読み取り、具体的なアドバイスをしてください。`
 }
 
-export default function AiChat({ emp, items, progress, reports }: Props) {
-  const [open, setOpen] = useState(false)
+export default function AiChat({ emp, items, progress, reports, open: openProp, onClose }: Props) {
+  const [openInternal, setOpenInternal] = useState(false)
+  const isControlled = openProp !== undefined
+  const open = isControlled ? openProp : openInternal
+  const setOpen = isControlled ? (v: boolean) => { if (!v && onClose) onClose() } : setOpenInternal
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -109,19 +115,21 @@ export default function AiChat({ emp, items, progress, reports }: Props) {
 
   return (
     <>
-      {/* 起動ボタン */}
-      <button
-        onClick={() => setOpen(true)}
-        style={{
-          position: 'fixed', bottom: '24px', right: '24px', zIndex: 100,
-          display: 'flex', alignItems: 'center', gap: '8px',
-          padding: '12px 20px', background: '#c8a96a', color: '#ffffff',
-          border: 'none', borderRadius: '28px', fontSize: '13px', fontWeight: 600,
-          cursor: 'pointer', boxShadow: '0 4px 16px rgba(200,169,106,0.4)',
-        }}
-      >
-        <Bot size={16} /> AI に相談
-      </button>
+      {/* 外部制御でない場合のみフローティングボタンを表示 */}
+      {!isControlled && (
+        <button
+          onClick={() => setOpen(true)}
+          style={{
+            position: 'fixed', bottom: '24px', right: '24px', zIndex: 100,
+            display: 'flex', alignItems: 'center', gap: '8px',
+            padding: '12px 20px', background: '#c8a96a', color: '#ffffff',
+            border: 'none', borderRadius: '28px', fontSize: '13px', fontWeight: 600,
+            cursor: 'pointer', boxShadow: '0 4px 16px rgba(200,169,106,0.4)',
+          }}
+        >
+          <Bot size={16} /> AI に相談
+        </button>
+      )}
 
       {/* チャットパネル */}
       {open && (
