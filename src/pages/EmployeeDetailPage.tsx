@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import type { Employee, CurriculumItem, ProgressRecord, ProgressComment } from '../types/database'
 import { differenceInDays, parseISO, format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay } from 'date-fns'
 import { ja } from 'date-fns/locale'
-import { Star, Video, User, BookOpen, Wrench, ExternalLink, MessageSquare, ChevronLeft, ChevronRight as ChevronRightIcon, Calendar, CheckCircle, FileText, Save, Bot } from 'lucide-react'
+import { Star, Video, User, BookOpen, Wrench, ExternalLink, MessageSquare, ChevronLeft, ChevronRight as ChevronRightIcon, Calendar, CheckCircle, FileText, Save, Bot, Flame, Trophy } from 'lucide-react'
 import { Breadcrumb } from '../components/Layout'
 import AiChat from '../components/AiChat'
 import type { DailyReport } from '../types/database'
+import { calcBadges, calcStreak, getNewMilestones } from '../utils/gamification'
 
 const TRAINER_TYPE_ICON = {
   self: <BookOpen size={13} color="#4b5563" />,
@@ -201,6 +202,9 @@ export default function EmployeeDetailPage() {
   const [aiChatOpen, setAiChatOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [loading, setLoading] = useState(true)
+  const [milestone, setMilestone] = useState<{ type: 'rate' | 'phase'; value: number } | null>(null)
+  const prevRateRef = useRef<number>(0)
+  const prevPhasesRef = useRef<number[]>([])
 
   useEffect(() => {
     function onResize() { setIsMobile(window.innerWidth < 768) }
@@ -242,7 +246,24 @@ export default function EmployeeDetailPage() {
       .from('progress_records')
       .update({ is_completed: nowCompleted, completed_at: nowCompleted ? new Date().toISOString() : null })
       .eq('id', rec.id).select().single()
-    if (data) setProgress(prev => prev.map(p => p.id === rec.id ? data : p))
+    if (data) {
+      const newProgress = progress.map(p => p.id === rec.id ? data : p)
+      setProgress(newProgress)
+      // マイルストーン検知
+      if (nowCompleted && emp) {
+        const newTotal = items.length
+        const newCompleted = newProgress.filter(p => p.is_completed).length
+        const newRate = newTotal > 0 ? Math.round((newCompleted / newTotal) * 100) : 0
+        const newPhases = [1, 2, 3, 4].filter(ph => {
+          const phItems = items.filter(i => i.phase === ph)
+          return phItems.length > 0 && phItems.every(i => newProgress.find(p => p.item_id === i.id && p.is_completed))
+        })
+        const found = getNewMilestones(newRate, prevRateRef.current, newPhases, prevPhasesRef.current, emp.id)
+        if (found.length > 0) setMilestone(found[0])
+        prevRateRef.current = newRate
+        prevPhasesRef.current = newPhases
+      }
+    }
   }
 
   async function toggleTestPassed(itemId: string) {
@@ -325,8 +346,74 @@ export default function EmployeeDetailPage() {
 
   const phaseItems = typeof activePhase === 'number' ? items.filter(i => i.phase === activePhase) : []
 
+  // ゲーミフィケーション計算
+  const badges = calcBadges(items, progress)
+  const streak = calcStreak(progress)
+  const earnedBadges = badges.filter(b => b.earned)
+
+  // prevRateRef初期化（loading完了時に一度だけ）
+  if (prevRateRef.current === 0 && rate > 0 && !milestone) {
+    prevRateRef.current = rate
+    prevPhasesRef.current = phaseStats.filter(s => s.completed === s.total && s.total > 0).map(s => s.phase)
+  }
+
+  // ── マイルストーンオーバーレイ ──
+  const MilestoneCelebration = milestone && (
+    <div
+      onClick={() => setMilestone(null)}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        background: 'rgba(0,0,0,0.55)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        animation: 'fadeIn 0.3s ease',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: '#ffffff', borderRadius: '16px', padding: '40px 48px',
+          textAlign: 'center', maxWidth: '360px', width: '90%',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+          animation: 'slideUp 0.35s ease',
+        }}
+      >
+        <div style={{ fontSize: '64px', marginBottom: '12px', lineHeight: 1 }}>
+          {milestone.type === 'rate' && milestone.value === 100 ? '⭐' :
+           milestone.type === 'rate' ? '🎉' : '🏅'}
+        </div>
+        <div style={{ fontSize: '22px', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
+          {milestone.type === 'rate'
+            ? `${milestone.value}% 達成！`
+            : `フェーズ${milestone.value} 完了！`}
+        </div>
+        <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '28px', lineHeight: 1.6 }}>
+          {milestone.type === 'rate' && milestone.value === 25 && 'スタートダッシュ！この調子で続けよう 🚀'}
+          {milestone.type === 'rate' && milestone.value === 50 && '折り返し地点！後半戦も頑張ろう 💪'}
+          {milestone.type === 'rate' && milestone.value === 75 && 'ゴールが見えてきた！あと一息 🌟'}
+          {milestone.type === 'rate' && milestone.value === 100 && '全カリキュラム完了！お疲れさまでした ✨'}
+          {milestone.type === 'phase' && `フェーズ${milestone.value}「${'導入・会社・商品・資金・土地・ヒアリング'.split('・')[milestone.value - 1]}」をマスターしました！`}
+        </div>
+        <button
+          onClick={() => setMilestone(null)}
+          style={{
+            padding: '12px 32px', background: '#c8a96a', color: '#fff',
+            border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 700,
+            cursor: 'pointer', boxShadow: '0 4px 12px rgba(200,169,106,0.4)',
+          }}
+        >
+          やったー！
+        </button>
+      </div>
+    </div>
+  )
+
   return (
     <div style={{ padding: isMobile ? '16px' : '24px 40px' }}>
+      {MilestoneCelebration}
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes slideUp { from { transform: translateY(24px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+      `}</style>
       <Breadcrumb items={[{ label: 'ダッシュボード', to: '/' }, { label: emp.name }]} />
 
       {/* ヘッダー */}
@@ -382,6 +469,46 @@ export default function EmployeeDetailPage() {
               </div>
             )
           })}
+        </div>
+
+        {/* ストリーク & バッジ */}
+        <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #d1d5db', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-start' }}>
+          {/* ストリーク */}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', background: '#eef0f3', borderRadius: '8px', padding: '10px 16px', minWidth: '180px' }}>
+            <Flame size={20} color={streak.streak > 0 ? '#e05454' : '#6b7280'} />
+            <div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: streak.streak > 0 ? '#e05454' : '#6b7280', lineHeight: 1 }}>
+                {streak.streak}日連続
+              </div>
+              <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '2px' }}>
+                今週 {streak.weekDays}日学習
+              </div>
+            </div>
+          </div>
+
+          {/* バッジ一覧 */}
+          <div style={{ flex: 1, display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+            {badges.map(b => (
+              <div
+                key={b.id}
+                title={b.description}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
+                  background: b.earned ? `${b.color}18` : '#eef0f3',
+                  color: b.earned ? b.color : '#d1d5db',
+                  border: `1px solid ${b.earned ? `${b.color}40` : '#d1d5db'}`,
+                  opacity: b.earned ? 1 : 0.6,
+                  transition: 'all 0.2s',
+                  filter: b.earned ? 'none' : 'grayscale(1)',
+                }}
+              >
+                <span style={{ fontSize: '14px' }}>{b.emoji}</span>
+                <span>{b.label}</span>
+                {b.earned && <Trophy size={11} />}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
