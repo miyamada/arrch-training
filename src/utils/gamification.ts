@@ -12,14 +12,14 @@ export interface Badge {
   earnedAt?: string
 }
 
-const PHASE_EMOJIS = ['', '🌱', '📚', '💰', '🎯']
-const PHASE_COLORS = ['', '#c8a96a', '#4a9e5c', '#5a8faa', '#aa5a8f']
-const PHASE_NAMES = ['', '導入', '会社・商品', '資金・土地', 'ヒアリング']
+const PHASE_MEDALS       = ['', '🥉', '🥈', '🥇', '🏆']
+const PHASE_MEDAL_COLORS = ['', '#b45309', '#9ca3af', '#c8a96a', '#7c3aed']
+const PHASE_NAMES        = ['', '導入', '会社・商品', '資金・土地', 'ヒアリング']
 
 export function calcBadges(items: CurriculumItem[], progress: ProgressRecord[]): Badge[] {
   const badges: Badge[] = []
 
-  // フェーズ完了バッジ
+  // フェーズ合格バッジ（🥉🥈🥇🏆）
   for (const phase of [1, 2, 3, 4]) {
     const phItems = items.filter(i => i.phase === phase)
     if (phItems.length === 0) continue
@@ -36,27 +36,12 @@ export function calcBadges(items: CurriculumItem[], progress: ProgressRecord[]):
       : undefined
     badges.push({
       id: `phase_${phase}`,
-      label: `フェーズ${phase}マスター`,
-      description: `フェーズ${phase}「${PHASE_NAMES[phase]}」全項目完了`,
-      emoji: PHASE_EMOJIS[phase],
-      color: PHASE_COLORS[phase],
+      label: `フェーズ${phase}合格`,
+      description: `フェーズ${phase}「${PHASE_NAMES[phase]}」全項目クリア`,
+      emoji: PHASE_MEDALS[phase],
+      color: PHASE_MEDAL_COLORS[phase],
       earned,
       earnedAt,
-    })
-  }
-
-  // 検定合格バッジ（フェーズ別）
-  for (const phase of [1, 2, 3, 4]) {
-    const testItems = items.filter(i => i.phase === phase && i.is_required_test)
-    if (testItems.length === 0) continue
-    const passedAll = testItems.every(i => progress.find(p => p.item_id === i.id && p.is_test_passed))
-    badges.push({
-      id: `test_${phase}`,
-      label: `フェーズ${phase}検定合格`,
-      description: `フェーズ${phase}の検定に全て合格`,
-      emoji: '🏆',
-      color: '#c8a96a',
-      earned: passedAll,
     })
   }
 
