@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function LoginPage() {
-  const { signIn, signInWithGoogle } = useAuth()
+  const { signIn, signInWithGoogle, employeeNotFound } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -56,6 +56,26 @@ export default function LoginPage() {
             育成カリキュラム管理システム
           </div>
         </div>
+
+        {/* Googleアカウント未登録エラー */}
+        {employeeNotFound && (
+          <div style={{
+            padding: '12px 16px',
+            background: 'rgba(224,84,84,0.07)',
+            border: '1px solid rgba(224,84,84,0.3)',
+            borderRadius: '4px',
+            color: '#e05454',
+            fontSize: '13px',
+            marginBottom: '20px',
+            lineHeight: '1.6',
+          }}>
+            <div style={{ fontWeight: 600, marginBottom: '4px' }}>このGoogleアカウントは登録されていません</div>
+            <div style={{ color: '#4b5563', fontSize: '12px' }}>
+              システムに登録されているメールアドレスと同じGoogleアカウントでログインしてください。
+              不明な場合は管理者に連絡してください。
+            </div>
+          </div>
+        )}
 
         {/* Googleログインボタン */}
         <button

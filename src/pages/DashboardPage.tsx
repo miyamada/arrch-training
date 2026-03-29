@@ -5,6 +5,7 @@ import type { Employee, CurriculumItem, ProgressRecord } from '../types/database
 import { differenceInDays, parseISO } from 'date-fns'
 import { AlertTriangle, Users, TrendingUp, Clock, BookOpen, ChevronRight } from 'lucide-react'
 import { Breadcrumb } from '../components/Layout'
+import { calcBadges } from '../utils/gamification'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
@@ -283,6 +284,36 @@ export default function DashboardPage() {
                   <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>
                     {new Date(emp.joined_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short' })} 入社
                   </div>
+                  {(() => {
+                    const earnedBadges = calcBadges(emp.items, emp.progress).filter(b => b.earned)
+                    if (earnedBadges.length === 0) return null
+                    return (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
+                        {earnedBadges.map(b => (
+                          <span
+                            key={b.id}
+                            title={b.description}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '3px',
+                              padding: '2px 7px',
+                              borderRadius: '2px',
+                              fontSize: '10px',
+                              fontWeight: 600,
+                              background: `${b.color}18`,
+                              color: b.color,
+                              border: `1px solid ${b.color}40`,
+                              whiteSpace: 'nowrap',
+                              cursor: 'default',
+                            }}
+                          >
+                            {b.emoji} {b.label}
+                          </span>
+                        ))}
+                      </div>
+                    )
+                  })()}
                 </td>
                 <td style={{ padding: '14px 16px', color: '#4b5563' }}>
                   {stats.monthsElapsed}ヶ月目

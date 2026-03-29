@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null
   employee: Employee | null
   loading: boolean
+  employeeNotFound: boolean
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
@@ -20,6 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [employee, setEmployee] = useState<Employee | null>(null)
   const [loading, setLoading] = useState(true)
+  const [employeeNotFound, setEmployeeNotFound] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -36,9 +38,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
+        setLoading(true)          // fetchEmployee中はローディング状態を維持
+        setEmployeeNotFound(false)
         fetchEmployee(session.user.id, session.user.email)
       } else {
         setEmployee(null)
+        setEmployeeNotFound(false)
         setLoading(false)
       }
     })
@@ -52,24 +57,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .from('employees')
       .select('*')
       .eq('id', userId)
-      .single()
+      .maybeSingle()
 
     if (data) {
       setEmployee(data)
+      setEmployeeNotFound(false)
       setLoading(false)
       return
     }
 
     // Google SSOなどでIDが異なる場合はemailで検索
+    // ※ RLSで id 一致のみ許可している場合、このクエリは0件になる可能性があります
+    //   → Supabase ダッシュボードで employees テーブルの RLS ポリシーに
+    //     「auth.email() = email」の条件を追加してください
     if (userEmail) {
       const { data: byEmail } = await supabase
         .from('employees')
         .select('*')
         .eq('email', userEmail)
-        .single()
-      setEmployee(byEmail)
+        .maybeSingle()
+
+      if (byEmail) {
+        setEmployee(byEmail)
+        setEmployeeNotFound(false)
+      } else {
+        // 認証は成功したがemployeesテーブルに該当なし
+        // → メールアドレス不一致 or RLSブロック
+        setEmployee(null)
+        setEmployeeNotFound(true)
+        await supabase.auth.signOut()   // セッションを切ってログアウト
+      }
     } else {
       setEmployee(null)
+      setEmployeeNotFound(true)
+      await supabase.auth.signOut()
     }
     setLoading(false)
   }
@@ -93,7 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, user, employee, loading, signIn, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ session, user, employee, loading, employeeNotFound, signIn, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   )
