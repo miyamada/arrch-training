@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function LoginPage() {
-  const { signIn, signInWithGoogle, employeeNotFound, employeeNotFoundEmail } = useAuth()
+  const { signIn, signInWithGoogle, employeeNotFound, employeeNotFoundEmail, oauthError } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -56,6 +56,28 @@ export default function LoginPage() {
             育成カリキュラム管理システム
           </div>
         </div>
+
+        {/* OAuthエラー（Googleリダイレクトエラー） */}
+        {oauthError && !employeeNotFound && (
+          <div style={{
+            padding: '12px 16px',
+            background: 'rgba(224,84,84,0.07)',
+            border: '1px solid rgba(224,84,84,0.3)',
+            borderRadius: '4px',
+            color: '#e05454',
+            fontSize: '13px',
+            marginBottom: '20px',
+            lineHeight: '1.6',
+          }}>
+            <div style={{ fontWeight: 600, marginBottom: '4px' }}>Googleログインに失敗しました</div>
+            <div style={{ fontSize: '11px', background: 'rgba(224,84,84,0.08)', borderRadius: '3px', padding: '4px 8px', marginBottom: '6px', fontFamily: 'monospace', color: '#c0392b' }}>
+              {oauthError}
+            </div>
+            <div style={{ color: '#4b5563', fontSize: '12px' }}>
+              管理者に上記エラーを共有してください。
+            </div>
+          </div>
+        )}
 
         {/* Googleアカウント未登録エラー */}
         {employeeNotFound && (

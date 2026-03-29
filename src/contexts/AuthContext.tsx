@@ -10,6 +10,7 @@ interface AuthContextType {
   loading: boolean
   employeeNotFound: boolean
   employeeNotFoundEmail: string | null
+  oauthError: string | null
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
@@ -24,8 +25,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [employeeNotFound, setEmployeeNotFound] = useState(false)
   const [employeeNotFoundEmail, setEmployeeNotFoundEmail] = useState<string | null>(null)
+  const [oauthError, setOauthError] = useState<string | null>(null)
 
   useEffect(() => {
+    // OAuthリダイレクト後のエラーをURLから取得
+    const hash = new URLSearchParams(window.location.hash.substring(1))
+    const search = new URLSearchParams(window.location.search)
+    const errCode = hash.get('error') || search.get('error')
+    const errDesc = hash.get('error_description') || search.get('error_description')
+    if (errCode) {
+      setOauthError(errDesc ? decodeURIComponent(errDesc.replace(/\+/g, ' ')) : errCode)
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
@@ -118,7 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, user, employee, loading, employeeNotFound, employeeNotFoundEmail, signIn, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ session, user, employee, loading, employeeNotFound, employeeNotFoundEmail, oauthError, signIn, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   )
