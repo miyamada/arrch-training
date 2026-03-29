@@ -104,7 +104,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: '40px', color: '#6b7280' }}>読み込み中...</div>
+      <div style={{ padding: '40px', color: '#4b5563' }}>読み込み中...</div>
     )
   }
 
@@ -122,7 +122,7 @@ export default function DashboardPage() {
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} style={{
             background: '#ffffff',
-            border: '1px solid #e5e7eb',
+            border: '1px solid #d1d5db',
             borderRadius: '4px',
             padding: '20px 24px',
           }}>
@@ -154,7 +154,7 @@ export default function DashboardPage() {
             <div style={{ fontSize: '12px', color: '#e05454', fontWeight: 600, marginBottom: '6px' }}>
               {delayedEmployees.length}名の研修者に遅延が発生しています
             </div>
-            <div style={{ fontSize: '12px', color: '#6b7280', lineHeight: '1.6' }}>
+            <div style={{ fontSize: '12px', color: '#4b5563', lineHeight: '1.6' }}>
               {delayedEmployees.map(({ emp, stats }) => (
                 <span key={emp.id} style={{ marginRight: '16px' }}>
                   {emp.name}（最大 <span style={{ color: '#e05454' }}>{stats.maxDelay}日</span> 遅れ）
@@ -169,14 +169,14 @@ export default function DashboardPage() {
       {statsRows.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
           {/* 社員別進捗率 */}
-          <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '20px 24px' }}>
+          <div style={{ background: '#ffffff', border: '1px solid #d1d5db', borderRadius: '4px', padding: '20px 24px' }}>
             <div style={{ fontSize: '13px', color: '#374151', fontWeight: 500, marginBottom: '16px' }}>社員別進捗率</div>
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={statsRows.map(({ emp, stats }) => ({ name: emp.name, rate: stats.rate }))} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f2f5" />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#6b7280' }} />
-                <Tooltip formatter={(v) => [`${v}%`, '進捗率']} contentStyle={{ fontSize: 12, border: '1px solid #e5e7eb', borderRadius: 4 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#d1d5db" />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#4b5563' }} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#4b5563' }} />
+                <Tooltip formatter={(v) => [`${v}%`, '進捗率']} contentStyle={{ fontSize: 12, border: '1px solid #d1d5db', borderRadius: 4 }} />
                 <Bar dataKey="rate" radius={[2, 2, 0, 0]}>
                   {statsRows.map(({ stats }, i) => (
                     <Cell key={i} fill={stats.isDelayed ? '#e05454' : stats.rate >= 80 ? '#4a9e5c' : '#c8a96a'} />
@@ -187,7 +187,7 @@ export default function DashboardPage() {
           </div>
 
           {/* フェーズ別人数分布 */}
-          <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '20px 24px' }}>
+          <div style={{ background: '#ffffff', border: '1px solid #d1d5db', borderRadius: '4px', padding: '20px 24px' }}>
             <div style={{ fontSize: '13px', color: '#374151', fontWeight: 500, marginBottom: '16px' }}>フェーズ別在籍人数</div>
             <ResponsiveContainer width="100%" height={180}>
               <BarChart
@@ -197,10 +197,10 @@ export default function DashboardPage() {
                 }))}
                 margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f2f5" />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#6b7280' }} />
-                <Tooltip formatter={(v) => [`${v}名`, '人数']} contentStyle={{ fontSize: 12, border: '1px solid #e5e7eb', borderRadius: 4 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#d1d5db" />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#4b5563' }} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#4b5563' }} />
+                <Tooltip formatter={(v) => [`${v}名`, '人数']} contentStyle={{ fontSize: 12, border: '1px solid #d1d5db', borderRadius: 4 }} />
                 <Bar dataKey="count" radius={[2, 2, 0, 0]}>
                   {[1,2,3,4].map((_, i) => (
                     <Cell key={i} fill={['#c8a96a','#4a9e5c','#5a8faa','#aa5a8f'][i]} />
@@ -213,7 +213,7 @@ export default function DashboardPage() {
       )}
 
       {/* フィルタータブ */}
-      <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', borderBottom: '1px solid #e5e7eb', paddingBottom: '0', overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', borderBottom: '1px solid #d1d5db', paddingBottom: '0', overflowX: 'auto' }}>
         {(['all', 'delayed', 1, 2, 3, 4] as const).map(f => {
           const label = f === 'all' ? 'すべて' : f === 'delayed' ? '遅延のみ' : `フェーズ${f}`
           const isActive = filter === f
@@ -224,7 +224,7 @@ export default function DashboardPage() {
               style={{
                 padding: '8px 16px',
                 fontSize: '12px',
-                color: isActive ? '#c8a96a' : '#6b7280',
+                color: isActive ? '#c8a96a' : '#4b5563',
                 background: 'none',
                 border: 'none',
                 borderBottom: isActive ? '2px solid #c8a96a' : '2px solid transparent',
@@ -242,20 +242,20 @@ export default function DashboardPage() {
       {/* 社員進捗テーブル */}
       <div style={{
         background: '#ffffff',
-        border: '1px solid #e5e7eb',
+        border: '1px solid #d1d5db',
         borderRadius: '4px',
         overflow: 'hidden',
       }}>
         <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: isMobile ? '600px' : 'unset' }}>
           <thead>
-            <tr style={{ borderBottom: '1px solid #e5e7eb', background: '#f7f8fa' }}>
+            <tr style={{ borderBottom: '1px solid #d1d5db', background: '#eef0f3' }}>
               {['社員名', '入社経過', '現在フェーズ', '進捗', 'スケジュール', '担当メンター', ''].map(h => (
                 <th key={h} style={{
                   padding: '12px 16px',
                   textAlign: 'left',
                   fontSize: '12px',
-                  color: '#6b7280',
+                  color: '#4b5563',
                   fontWeight: 600,
                   letterSpacing: '0.05em',
                   whiteSpace: 'nowrap',
@@ -266,7 +266,7 @@ export default function DashboardPage() {
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: '#9ca3af' }}>
+                <td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: '#6b7280' }}>
                   該当する研修者がいません
                 </td>
               </tr>
@@ -274,17 +274,17 @@ export default function DashboardPage() {
             {filtered.map(({ emp, stats }) => (
               <tr
                 key={emp.id}
-                style={{ borderBottom: '1px solid #f0f2f5', transition: 'background 0.1s' }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#f7f8fa')}
+                style={{ borderBottom: '1px solid #d1d5db', transition: 'background 0.1s' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#eef0f3')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <td style={{ padding: '14px 16px' }}>
                   <div style={{ color: '#111827', fontWeight: 500 }}>{emp.name}</div>
-                  <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
+                  <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>
                     {new Date(emp.joined_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short' })} 入社
                   </div>
                 </td>
-                <td style={{ padding: '14px 16px', color: '#6b7280' }}>
+                <td style={{ padding: '14px 16px', color: '#4b5563' }}>
                   {stats.monthsElapsed}ヶ月目
                 </td>
                 <td style={{ padding: '14px 16px' }}>
@@ -306,7 +306,7 @@ export default function DashboardPage() {
                     <div style={{ flex: 1 }}>
                       <div style={{
                         height: '4px',
-                        background: '#f0f2f5',
+                        background: '#d1d5db',
                         borderRadius: '2px',
                         overflow: 'hidden',
                         marginBottom: '4px',
@@ -319,7 +319,7 @@ export default function DashboardPage() {
                           transition: 'width 0.3s',
                         }} />
                       </div>
-                      <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                      <div style={{ fontSize: '11px', color: '#4b5563' }}>
                         {stats.completed}/{stats.total}項目
                       </div>
                     </div>
@@ -355,7 +355,7 @@ export default function DashboardPage() {
                     </span>
                   )}
                 </td>
-                <td style={{ padding: '14px 16px', color: '#6b7280', fontSize: '12px' }}>
+                <td style={{ padding: '14px 16px', color: '#4b5563', fontSize: '12px' }}>
                   {emp.mentor?.name ?? '—'}
                 </td>
                 <td style={{ padding: '14px 16px' }}>

@@ -37,7 +37,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       width: '220px',
       flexShrink: 0,
       background: '#ffffff',
-      borderRight: '1px solid #e5e7eb',
+      borderRight: '1px solid #d1d5db',
       display: 'flex',
       flexDirection: 'column',
       ...(isMobile ? {
@@ -48,13 +48,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       } : {}),
     }}>
       {/* ロゴ */}
-      <div style={{ padding: '28px 24px 24px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ padding: '28px 24px 24px', borderBottom: '1px solid #d1d5db', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <img src="/arrch-logo.png" alt="ARRCH" style={{ height: '36px', objectFit: 'contain', display: 'block' }} />
-          <div style={{ fontSize: '10px', color: '#9ca3af', letterSpacing: '0.1em', marginTop: '5px' }}>育成カリキュラム管理</div>
+          <div style={{ fontSize: '10px', color: '#6b7280', letterSpacing: '0.1em', marginTop: '5px' }}>育成カリキュラム管理</div>
         </div>
         {isMobile && (
-          <button onClick={() => setSidebarOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: '4px' }}>
+          <button onClick={() => setSidebarOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: '4px' }}>
             <X size={18} />
           </button>
         )}
@@ -69,7 +69,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Link key={to} to={to} style={{
                 display: 'flex', alignItems: 'center', gap: '10px',
                 padding: '12px 24px', fontSize: '13px',
-                color: isActive ? '#111827' : '#6b7280',
+                color: isActive ? '#111827' : '#4b5563',
                 textDecoration: 'none',
                 borderLeft: isActive ? '2px solid #c8a96a' : '2px solid transparent',
                 background: isActive ? 'rgba(200,169,106,0.08)' : 'transparent',
@@ -92,14 +92,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </nav>
 
       {/* ユーザー情報 + ログアウト */}
-      <div style={{ padding: '16px 24px', borderTop: '1px solid #e5e7eb' }}>
+      <div style={{ padding: '16px 24px', borderTop: '1px solid #d1d5db' }}>
         <div style={{ fontSize: '12px', color: '#111827', marginBottom: '2px' }}>{employee?.name}</div>
-        <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '12px' }}>
+        <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '12px' }}>
           {employee?.role === 'admin' ? '管理者' : '研修中'}
         </div>
         <button onClick={signOut} style={{
           display: 'flex', alignItems: 'center', gap: '8px',
-          fontSize: '12px', color: '#9ca3af', background: 'none',
+          fontSize: '12px', color: '#6b7280', background: 'none',
           border: 'none', cursor: 'pointer', padding: '0',
         }}>
           <LogOut size={13} />ログアウト
@@ -127,15 +127,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* メインコンテンツ */}
-      <main style={{ flex: 1, overflow: 'auto', background: '#f7f8fa' }}>
+      <main style={{ flex: 1, overflow: 'auto', background: '#eef0f3' }}>
         {/* モバイルヘッダー */}
         {isMobile && (
           <div style={{
             position: 'sticky', top: 0, zIndex: 30,
-            background: '#ffffff', borderBottom: '1px solid #e5e7eb',
+            background: '#ffffff', borderBottom: '1px solid #d1d5db',
             padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px',
           }}>
-            <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: '4px', display: 'flex' }}>
+            <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4b5563', padding: '4px', display: 'flex' }}>
               <Menu size={20} />
             </button>
             <span style={{ fontSize: '14px', fontWeight: 600, color: '#c8a96a', letterSpacing: '0.1em' }}>ARRCH</span>
@@ -153,9 +153,9 @@ export function Breadcrumb({ items }: { items: { label: string; to?: string }[] 
     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '24px', flexWrap: 'wrap' }}>
       {items.map((item, i) => (
         <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          {i > 0 && <ChevronRight size={12} color="#9ca3af" />}
+          {i > 0 && <ChevronRight size={12} color="#6b7280" />}
           {item.to ? (
-            <Link to={item.to} style={{ fontSize: '12px', color: '#6b7280', textDecoration: 'none' }}>{item.label}</Link>
+            <Link to={item.to} style={{ fontSize: '12px', color: '#4b5563', textDecoration: 'none' }}>{item.label}</Link>
           ) : (
             <span style={{ fontSize: '12px', color: '#111827' }}>{item.label}</span>
           )}

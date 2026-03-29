@@ -11,7 +11,7 @@ import AiChat from '../components/AiChat'
 import type { DailyReport } from '../types/database'
 
 const TRAINER_TYPE_ICON = {
-  self: <BookOpen size={13} color="#6b7280" />,
+  self: <BookOpen size={13} color="#4b5563" />,
   trainer: <User size={13} color="#c8a96a" />,
   mentor: <Wrench size={13} color="#5a8faa" />,
 }
@@ -65,13 +65,13 @@ function CommentPanel({ record, authorId, isAdmin }: {
   }
 
   return (
-    <div style={{ marginTop: '12px', borderTop: '1px solid #f0f2f5', paddingTop: '10px' }}>
+    <div style={{ marginTop: '12px', borderTop: '1px solid #d1d5db', paddingTop: '10px' }}>
       {comments.length > 0 && (
         <div style={{ marginBottom: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {comments.map(c => (
-            <div key={c.id} style={{ fontSize: '11px', background: '#f7f8fa', borderRadius: '4px', padding: '6px 10px' }}>
+            <div key={c.id} style={{ fontSize: '11px', background: '#eef0f3', borderRadius: '4px', padding: '6px 10px' }}>
               <span style={{ color: '#c8a96a', fontWeight: 600 }}>{authors[c.author_id] ?? '—'}</span>
-              <span style={{ color: '#9ca3af', marginLeft: '8px' }}>{format(parseISO(c.created_at), 'M/d HH:mm')}</span>
+              <span style={{ color: '#6b7280', marginLeft: '8px' }}>{format(parseISO(c.created_at), 'M/d HH:mm')}</span>
               <div style={{ color: '#374151', marginTop: '2px' }}>{c.content}</div>
             </div>
           ))}
@@ -86,7 +86,7 @@ function CommentPanel({ record, authorId, isAdmin }: {
             placeholder="コメントを追加（Enter送信）"
             style={{
               flex: 1, fontSize: '11px', padding: '5px 8px',
-              background: '#f7f8fa', border: '1px solid #e5e7eb', borderRadius: '4px',
+              background: '#eef0f3', border: '1px solid #d1d5db', borderRadius: '4px',
               color: '#111827', outline: 'none',
             }}
           />
@@ -125,20 +125,20 @@ function CalendarView({ items, progress }: { items: CurriculumItem[], progress: 
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
         <button onClick={() => setCurrent(d => new Date(d.getFullYear(), d.getMonth() - 1, 1))}
-          style={{ background: 'none', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', color: '#6b7280' }}>
+          style={{ background: 'none', border: '1px solid #d1d5db', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', color: '#4b5563' }}>
           <ChevronLeft size={14} />
         </button>
         <span style={{ fontSize: '14px', fontWeight: 600, color: '#111827', minWidth: '120px', textAlign: 'center' }}>
           {format(current, 'yyyy年M月', { locale: ja })}
         </span>
         <button onClick={() => setCurrent(d => new Date(d.getFullYear(), d.getMonth() + 1, 1))}
-          style={{ background: 'none', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', color: '#6b7280' }}>
+          style={{ background: 'none', border: '1px solid #d1d5db', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', color: '#4b5563' }}>
           <ChevronRightIcon size={14} />
         </button>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '2px' }}>
         {DOW.map((d, i) => (
-          <div key={d} style={{ textAlign: 'center', fontSize: '10px', color: i === 0 ? '#e05454' : i === 6 ? '#5a8faa' : '#9ca3af', padding: '4px' }}>{d}</div>
+          <div key={d} style={{ textAlign: 'center', fontSize: '10px', color: i === 0 ? '#e05454' : i === 6 ? '#5a8faa' : '#6b7280', padding: '4px' }}>{d}</div>
         ))}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
@@ -153,10 +153,10 @@ function CalendarView({ items, progress }: { items: CurriculumItem[], progress: 
             <div key={key} style={{
               minHeight: '64px', padding: '4px',
               background: isToday ? 'rgba(200,169,106,0.08)' : '#ffffff',
-              border: `1px solid ${isToday ? '#c8a96a' : '#f0f2f5'}`,
+              border: `1px solid ${isToday ? '#c8a96a' : '#d1d5db'}`,
               borderRadius: '4px',
             }}>
-              <div style={{ fontSize: '11px', color: isToday ? '#c8a96a' : '#6b7280', fontWeight: isToday ? 700 : 400, marginBottom: '2px' }}>
+              <div style={{ fontSize: '11px', color: isToday ? '#c8a96a' : '#4b5563', fontWeight: isToday ? 700 : 400, marginBottom: '2px' }}>
                 {day.getDate()}
               </div>
               {entries.slice(0, 2).map(({ item, rec }) => (
@@ -170,7 +170,7 @@ function CalendarView({ items, progress }: { items: CurriculumItem[], progress: 
                 </div>
               ))}
               {entries.length > 2 && (
-                <div style={{ fontSize: '9px', color: '#9ca3af' }}>+{entries.length - 2}</div>
+                <div style={{ fontSize: '9px', color: '#6b7280' }}>+{entries.length - 2}</div>
               )}
             </div>
           )
@@ -310,7 +310,7 @@ export default function EmployeeDetailPage() {
     })
   }
 
-  if (loading) return <div style={{ padding: '40px', color: '#6b7280' }}>読み込み中...</div>
+  if (loading) return <div style={{ padding: '40px', color: '#4b5563' }}>読み込み中...</div>
   if (!emp) return <div style={{ padding: '40px', color: '#e05454' }}>社員が見つかりません</div>
 
   const total = items.length
@@ -330,15 +330,15 @@ export default function EmployeeDetailPage() {
       <Breadcrumb items={[{ label: 'ダッシュボード', to: '/' }, { label: emp.name }]} />
 
       {/* ヘッダー */}
-      <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '24px 28px', marginBottom: '24px' }}>
+      <div style={{ background: '#ffffff', border: '1px solid #d1d5db', borderRadius: '4px', padding: '24px 28px', marginBottom: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <h1 style={{ fontSize: '22px', fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>{emp.name}</h1>
-            <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>
+            <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px' }}>
               入社日: {format(parseISO(emp.joined_at), 'yyyy年M月d日')}
             </div>
             {mentor && (
-              <div style={{ fontSize: '12px', color: '#6b7280' }}>
+              <div style={{ fontSize: '12px', color: '#4b5563' }}>
                 担当メンター: <span style={{ color: '#c8a96a' }}>{mentor.name}</span>
               </div>
             )}
@@ -346,7 +346,7 @@ export default function EmployeeDetailPage() {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '48px', fontWeight: 700, color: '#c8a96a', lineHeight: 1 }}>{rate}%</div>
-              <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>{completed}/{total} 項目完了</div>
+              <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>{completed}/{total} 項目完了</div>
             </div>
             {isAdmin && (
               <button
@@ -372,13 +372,13 @@ export default function EmployeeDetailPage() {
             return (
               <div key={phase}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '11px', color: '#6b7280' }}>フェーズ{phase}</span>
+                  <span style={{ fontSize: '11px', color: '#4b5563' }}>フェーズ{phase}</span>
                   <span style={{ fontSize: '11px', color: colors[phase] }}>{r}%</span>
                 </div>
-                <div style={{ height: '4px', background: '#f0f2f5', borderRadius: '2px' }}>
+                <div style={{ height: '4px', background: '#d1d5db', borderRadius: '2px' }}>
                   <div style={{ height: '100%', width: `${r}%`, background: colors[phase], borderRadius: '2px' }} />
                 </div>
-                <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '4px' }}>{c}/{t}項目</div>
+                <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '4px' }}>{c}/{t}項目</div>
               </div>
             )
           })}
@@ -396,8 +396,8 @@ export default function EmployeeDetailPage() {
               padding: '10px 18px', fontSize: '13px', fontWeight: isActive ? 700 : 400,
               whiteSpace: 'nowrap', cursor: 'pointer',
               background: isActive ? '#c8a96a' : '#ffffff',
-              color: isActive ? '#ffffff' : '#6b7280',
-              border: isActive ? '1px solid #c8a96a' : '1px solid #e5e7eb',
+              color: isActive ? '#ffffff' : '#4b5563',
+              border: isActive ? '1px solid #c8a96a' : '1px solid #d1d5db',
               borderRadius: '8px',
               boxShadow: isActive ? '0 2px 8px rgba(200,169,106,0.3)' : 'none',
               transition: 'all 0.15s',
@@ -416,8 +416,8 @@ export default function EmployeeDetailPage() {
           padding: '10px 18px', fontSize: '13px', fontWeight: activePhase === 'calendar' ? 700 : 400,
           whiteSpace: 'nowrap', cursor: 'pointer',
           background: activePhase === 'calendar' ? '#c8a96a' : '#ffffff',
-          color: activePhase === 'calendar' ? '#ffffff' : '#6b7280',
-          border: activePhase === 'calendar' ? '1px solid #c8a96a' : '1px solid #e5e7eb',
+          color: activePhase === 'calendar' ? '#ffffff' : '#4b5563',
+          border: activePhase === 'calendar' ? '1px solid #c8a96a' : '1px solid #d1d5db',
           borderRadius: '8px',
           boxShadow: activePhase === 'calendar' ? '0 2px 8px rgba(200,169,106,0.3)' : 'none',
           transition: 'all 0.15s', gap: '4px', minWidth: '80px',
@@ -430,8 +430,8 @@ export default function EmployeeDetailPage() {
           padding: '10px 18px', fontSize: '13px', fontWeight: activePhase === 'reports' ? 700 : 400,
           whiteSpace: 'nowrap', cursor: 'pointer',
           background: activePhase === 'reports' ? '#c8a96a' : '#ffffff',
-          color: activePhase === 'reports' ? '#ffffff' : '#6b7280',
-          border: activePhase === 'reports' ? '1px solid #c8a96a' : '1px solid #e5e7eb',
+          color: activePhase === 'reports' ? '#ffffff' : '#4b5563',
+          border: activePhase === 'reports' ? '1px solid #c8a96a' : '1px solid #d1d5db',
           borderRadius: '8px',
           boxShadow: activePhase === 'reports' ? '0 2px 8px rgba(200,169,106,0.3)' : 'none',
           transition: 'all 0.15s', gap: '4px', minWidth: '80px', position: 'relative',
@@ -450,7 +450,7 @@ export default function EmployeeDetailPage() {
 
       {/* カレンダービュー */}
       {activePhase === 'calendar' && (
-        <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '24px' }}>
+        <div style={{ background: '#ffffff', border: '1px solid #d1d5db', borderRadius: '4px', padding: '24px' }}>
           <CalendarView items={items} progress={progress} />
         </div>
       )}
@@ -459,23 +459,23 @@ export default function EmployeeDetailPage() {
       {activePhase === 'reports' && (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '200px 1fr', gap: '16px' }}>
           {/* 左: 日報一覧 */}
-          <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', overflow: 'hidden' }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', fontSize: '11px', color: '#9ca3af', fontWeight: 600 }}>過去の日報</div>
+          <div style={{ background: '#ffffff', border: '1px solid #d1d5db', borderRadius: '4px', overflow: 'hidden' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #d1d5db', fontSize: '11px', color: '#6b7280', fontWeight: 600 }}>過去の日報</div>
             {reports.length === 0 ? (
-              <div style={{ padding: '16px', fontSize: '11px', color: '#9ca3af', textAlign: 'center' }}>まだ日報がありません</div>
+              <div style={{ padding: '16px', fontSize: '11px', color: '#6b7280', textAlign: 'center' }}>まだ日報がありません</div>
             ) : (
               reports.map(r => (
                 <button key={r.id} onClick={() => selectReport(r)} style={{
                   width: '100%', padding: '10px 16px', textAlign: 'left',
                   background: r.report_date === selectedDate ? 'rgba(200,169,106,0.08)' : 'transparent',
-                  border: 'none', borderBottom: '1px solid #f0f2f5',
+                  border: 'none', borderBottom: '1px solid #d1d5db',
                   borderLeft: r.report_date === selectedDate ? '2px solid #c8a96a' : '2px solid transparent',
                   cursor: 'pointer',
                 }}>
                   <div style={{ fontSize: '12px', color: '#111827', fontWeight: r.report_date === selectedDate ? 600 : 400 }}>
                     {format(parseISO(r.report_date), 'M月d日(EEE)', { locale: ja })}
                   </div>
-                  <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {r.goal_and_achievement.slice(0, 20) || '—'}
                   </div>
                 </button>
@@ -484,20 +484,20 @@ export default function EmployeeDetailPage() {
           </div>
 
           {/* 右: 日報入力/表示 */}
-          <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '24px' }}>
+          <div style={{ background: '#ffffff', border: '1px solid #d1d5db', borderRadius: '4px', padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <input
                 type="date"
                 value={selectedDate}
                 onChange={e => onDateChange(e.target.value)}
                 disabled={!isAdmin && me?.id !== targetId}
-                style={{ fontSize: '13px', fontWeight: 600, color: '#111827', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '6px 10px', background: '#f7f8fa' }}
+                style={{ fontSize: '13px', fontWeight: 600, color: '#111827', border: '1px solid #d1d5db', borderRadius: '4px', padding: '6px 10px', background: '#eef0f3' }}
               />
               {(isAdmin || me?.id === targetId) && (
                 <button onClick={saveReport} disabled={reportSaving} style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '8px 16px', background: reportSaving ? '#f0f2f5' : '#c8a96a',
-                  color: reportSaving ? '#9ca3af' : '#ffffff', border: 'none', borderRadius: '4px',
+                  padding: '8px 16px', background: reportSaving ? '#d1d5db' : '#c8a96a',
+                  color: reportSaving ? '#6b7280' : '#ffffff', border: 'none', borderRadius: '4px',
                   fontSize: '12px', fontWeight: 600, cursor: reportSaving ? 'not-allowed' : 'pointer',
                 }}>
                   <Save size={13} />{reportSaving ? '保存中...' : '保存'}
@@ -511,7 +511,7 @@ export default function EmployeeDetailPage() {
               { key: 'tomorrow_goal', label: '明日の目標とそれに対してどう行動していくか' },
             ].map(({ key, label }) => (
               <div key={key} style={{ marginBottom: '20px' }}>
-                <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600, marginBottom: '8px' }}>【{label}】</div>
+                <div style={{ fontSize: '11px', color: '#4b5563', fontWeight: 600, marginBottom: '8px' }}>【{label}】</div>
                 <textarea
                   value={reportForm[key as keyof typeof reportForm]}
                   onChange={e => setReportForm(f => ({ ...f, [key]: e.target.value }))}
@@ -520,7 +520,7 @@ export default function EmployeeDetailPage() {
                   placeholder={isAdmin || me?.id === targetId ? '入力してください' : '—'}
                   style={{
                     width: '100%', padding: '10px 12px',
-                    background: '#f7f8fa', border: '1px solid #e5e7eb', borderRadius: '4px',
+                    background: '#eef0f3', border: '1px solid #d1d5db', borderRadius: '4px',
                     color: '#111827', fontSize: '13px', resize: 'vertical',
                     fontFamily: 'inherit', lineHeight: 1.6,
                     cursor: (!isAdmin && me?.id !== targetId) ? 'default' : 'text',
@@ -534,7 +534,7 @@ export default function EmployeeDetailPage() {
 
       {/* チェックリスト */}
       {typeof activePhase === 'number' && (
-        <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', overflow: 'hidden' }}>
+        <div style={{ background: '#ffffff', border: '1px solid #d1d5db', borderRadius: '4px', overflow: 'hidden' }}>
           {phaseItems.map((item, idx) => {
             const rec = progress.find(p => p.item_id === item.id)
             const isCompleted = rec?.is_completed ?? false
@@ -547,7 +547,7 @@ export default function EmployeeDetailPage() {
 
             return (
               <div key={item.id} style={{
-                borderBottom: idx < phaseItems.length - 1 ? '1px solid #f0f2f5' : 'none',
+                borderBottom: idx < phaseItems.length - 1 ? '1px solid #d1d5db' : 'none',
                 padding: '16px 20px',
                 background: isCompleted ? 'rgba(74,158,92,0.02)' : 'transparent',
               }}>
@@ -557,10 +557,10 @@ export default function EmployeeDetailPage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '6px' }}>
                       {item.is_required_test && <Star size={13} color="#c8a96a" fill="#c8a96a" />}
-                      <span style={{ fontSize: '13px', color: isCompleted ? '#9ca3af' : '#111827', textDecoration: isCompleted ? 'line-through' : 'none' }}>
+                      <span style={{ fontSize: '13px', color: isCompleted ? '#6b7280' : '#111827', textDecoration: isCompleted ? 'line-through' : 'none' }}>
                         {item.content}
                       </span>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#6b7280', padding: '2px 8px', border: '1px solid #e5e7eb', borderRadius: '2px' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#4b5563', padding: '2px 8px', border: '1px solid #d1d5db', borderRadius: '2px' }}>
                         {TRAINER_TYPE_ICON[item.trainer_type]}{TRAINER_TYPE_LABEL[item.trainer_type]}
                       </span>
                       {item.video_url && (
@@ -598,37 +598,37 @@ export default function EmployeeDetailPage() {
                     </div>
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: isMobile ? '8px' : '12px', marginTop: '8px' }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#9ca3af' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#6b7280' }}>
                         予定日:
                         <input type="date" disabled={!isAdmin} value={rec?.planned_date ?? ''}
                           onChange={e => updateField(item.id, 'planned_date', e.target.value)}
-                          style={{ background: '#f7f8fa', border: '1px solid #e5e7eb', borderRadius: '2px', color: isDelayed ? '#e05454' : '#6b7280', fontSize: '11px', padding: '2px 6px', cursor: isAdmin ? 'pointer' : 'not-allowed', opacity: isAdmin ? 1 : 0.6 }} />
+                          style={{ background: '#eef0f3', border: '1px solid #d1d5db', borderRadius: '2px', color: isDelayed ? '#e05454' : '#4b5563', fontSize: '11px', padding: '2px 6px', cursor: isAdmin ? 'pointer' : 'not-allowed', opacity: isAdmin ? 1 : 0.6 }} />
                       </label>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#9ca3af' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#6b7280' }}>
                         担当者:
                         {isAdmin ? (
                           <select
                             value={rec?.trainer_name ?? ''}
                             onChange={e => updateField(item.id, 'trainer_name', e.target.value)}
-                            style={{ background: '#f7f8fa', border: '1px solid #e5e7eb', borderRadius: '2px', color: '#6b7280', fontSize: '11px', padding: '2px 6px', minWidth: '100px' }}
+                            style={{ background: '#eef0f3', border: '1px solid #d1d5db', borderRadius: '2px', color: '#4b5563', fontSize: '11px', padding: '2px 6px', minWidth: '100px' }}
                           >
                             <option value="">未設定</option>
                             {admins.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
                           </select>
                         ) : (
-                          <span style={{ fontSize: '11px', color: '#6b7280' }}>{rec?.trainer_name ?? '—'}</span>
+                          <span style={{ fontSize: '11px', color: '#4b5563' }}>{rec?.trainer_name ?? '—'}</span>
                         )}
                       </label>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#9ca3af' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#6b7280' }}>
                         メモ:
                         <input type="text" disabled={!isAdmin} value={rec?.memo ?? ''} onChange={e => updateField(item.id, 'memo', e.target.value)} placeholder="メモ"
-                          style={{ background: '#f7f8fa', border: '1px solid #e5e7eb', borderRadius: '2px', color: '#6b7280', fontSize: '11px', padding: '2px 6px', width: '160px', cursor: isAdmin ? 'text' : 'not-allowed', opacity: isAdmin ? 1 : 0.6 }} />
+                          style={{ background: '#eef0f3', border: '1px solid #d1d5db', borderRadius: '2px', color: '#4b5563', fontSize: '11px', padding: '2px 6px', width: '160px', cursor: isAdmin ? 'text' : 'not-allowed', opacity: isAdmin ? 1 : 0.6 }} />
                       </label>
                       {rec && (
                         <button onClick={() => toggleComment(rec.id)} style={{
                           display: 'flex', alignItems: 'center', gap: '4px',
                           background: 'none', border: 'none', cursor: 'pointer',
-                          fontSize: '11px', color: showComment ? '#c8a96a' : '#9ca3af', padding: 0,
+                          fontSize: '11px', color: showComment ? '#c8a96a' : '#6b7280', padding: 0,
                         }}>
                           <MessageSquare size={12} />コメント
                         </button>

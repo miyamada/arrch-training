@@ -34,7 +34,7 @@ export default function LoginPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#f7f8fa',
+      background: '#eef0f3',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -50,7 +50,7 @@ export default function LoginPage() {
           />
           <div style={{
             fontSize: '13px',
-            color: '#6b7280',
+            color: '#4b5563',
             letterSpacing: '0.1em',
           }}>
             育成カリキュラム管理システム
@@ -65,7 +65,7 @@ export default function LoginPage() {
             width: '100%',
             padding: '13px',
             background: '#ffffff',
-            border: '1px solid #e5e7eb',
+            border: '1px solid #d1d5db',
             borderRadius: '4px',
             fontSize: '14px',
             fontWeight: 500,
@@ -79,7 +79,7 @@ export default function LoginPage() {
             boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
             transition: 'background 0.15s',
           }}
-          onMouseEnter={e => { if (!googleLoading) (e.currentTarget as HTMLButtonElement).style.background = '#f7f8fa' }}
+          onMouseEnter={e => { if (!googleLoading) (e.currentTarget as HTMLButtonElement).style.background = '#eef0f3' }}
           onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#ffffff' }}
         >
           {/* Google Icon */}
@@ -94,9 +94,9 @@ export default function LoginPage() {
 
         {/* 区切り */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-          <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }} />
-          <span style={{ fontSize: '12px', color: '#9ca3af' }}>または</span>
-          <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }} />
+          <div style={{ flex: 1, height: '1px', background: '#d1d5db' }} />
+          <span style={{ fontSize: '12px', color: '#6b7280' }}>または</span>
+          <div style={{ flex: 1, height: '1px', background: '#d1d5db' }} />
         </div>
 
         {/* メール・パスワードフォーム */}
@@ -120,7 +120,7 @@ export default function LoginPage() {
                 width: '100%',
                 padding: '12px 14px',
                 background: '#ffffff',
-                border: '1px solid #e5e7eb',
+                border: '1px solid #d1d5db',
                 borderRadius: '4px',
                 color: '#111827',
                 fontSize: '14px',
@@ -150,7 +150,7 @@ export default function LoginPage() {
                 width: '100%',
                 padding: '12px 14px',
                 background: '#ffffff',
-                border: '1px solid #e5e7eb',
+                border: '1px solid #d1d5db',
                 borderRadius: '4px',
                 color: '#111827',
                 fontSize: '14px',
@@ -181,8 +181,8 @@ export default function LoginPage() {
             style={{
               width: '100%',
               padding: '13px',
-              background: loading ? '#f0f2f5' : '#c8a96a',
-              color: loading ? '#9ca3af' : '#ffffff',
+              background: loading ? '#d1d5db' : '#c8a96a',
+              color: loading ? '#6b7280' : '#ffffff',
               border: 'none',
               borderRadius: '4px',
               fontSize: '14px',

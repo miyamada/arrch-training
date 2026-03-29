@@ -152,22 +152,22 @@ export default function AiChat({ emp, items, progress, reports, open: openProp, 
           zIndex: 100,
           width: window.innerWidth < 768 ? 'auto' : '380px',
           height: '520px',
-          background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px',
+          background: '#ffffff', border: '1px solid #d1d5db', borderRadius: '12px',
           boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
           display: 'flex', flexDirection: 'column',
           overflow: 'hidden',
         }}>
           {/* ヘッダー */}
           <div style={{
-            padding: '14px 16px', borderBottom: '1px solid #e5e7eb',
+            padding: '14px 16px', borderBottom: '1px solid #d1d5db',
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            background: '#f7f8fa',
+            background: '#eef0f3',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Bot size={16} color="#c8a96a" />
               <span style={{ fontSize: '13px', fontWeight: 600, color: '#111827' }}>AI相談 — {emp.name}</span>
             </div>
-            <button onClick={handleClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', display: 'flex' }}>
+            <button onClick={handleClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', display: 'flex' }}>
               <X size={16} />
             </button>
           </div>
@@ -183,18 +183,18 @@ export default function AiChat({ emp, items, progress, reports, open: openProp, 
                   maxWidth: '85%',
                   padding: '10px 14px',
                   borderRadius: msg.role === 'user' ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
-                  background: msg.role === 'user' ? '#c8a96a' : '#f7f8fa',
+                  background: msg.role === 'user' ? '#c8a96a' : '#eef0f3',
                   color: msg.role === 'user' ? '#ffffff' : '#111827',
                   fontSize: '12px', lineHeight: 1.6,
                   whiteSpace: 'pre-wrap',
-                  border: msg.role === 'model' ? '1px solid #e5e7eb' : 'none',
+                  border: msg.role === 'model' ? '1px solid #d1d5db' : 'none',
                 }}>
                   {msg.text}
                 </div>
               </div>
             ))}
             {loading && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#9ca3af', fontSize: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6b7280', fontSize: '12px' }}>
                 <Loader size={13} style={{ animation: 'spin 1s linear infinite' }} /> 考え中...
               </div>
             )}
@@ -202,7 +202,7 @@ export default function AiChat({ emp, items, progress, reports, open: openProp, 
           </div>
 
           {/* 入力欄 */}
-          <div style={{ padding: '12px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '8px' }}>
+          <div style={{ padding: '12px', borderTop: '1px solid #d1d5db', display: 'flex', gap: '8px' }}>
             <input
               value={input}
               onChange={e => setInput(e.target.value)}
@@ -210,13 +210,13 @@ export default function AiChat({ emp, items, progress, reports, open: openProp, 
               placeholder="質問を入力（Enter送信）"
               style={{
                 flex: 1, padding: '8px 12px', fontSize: '12px',
-                background: '#f7f8fa', border: '1px solid #e5e7eb', borderRadius: '6px',
+                background: '#eef0f3', border: '1px solid #d1d5db', borderRadius: '6px',
                 color: '#111827', outline: 'none',
               }}
             />
             <button onClick={sendMessage} disabled={loading || !input.trim()} style={{
-              padding: '8px 12px', background: loading || !input.trim() ? '#f0f2f5' : '#c8a96a',
-              color: loading || !input.trim() ? '#9ca3af' : '#ffffff',
+              padding: '8px 12px', background: loading || !input.trim() ? '#d1d5db' : '#c8a96a',
+              color: loading || !input.trim() ? '#6b7280' : '#ffffff',
               border: 'none', borderRadius: '6px', cursor: loading ? 'not-allowed' : 'pointer',
               display: 'flex', alignItems: 'center',
             }}>
