@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function LoginPage() {
-  const { signIn, signInWithGoogle, employeeNotFound } = useAuth()
+  const { signIn, signInWithGoogle, employeeNotFound, employeeNotFoundEmail } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -70,9 +70,14 @@ export default function LoginPage() {
             lineHeight: '1.6',
           }}>
             <div style={{ fontWeight: 600, marginBottom: '4px' }}>このGoogleアカウントは登録されていません</div>
+            {employeeNotFoundEmail && (
+              <div style={{ fontSize: '11px', background: 'rgba(224,84,84,0.08)', borderRadius: '3px', padding: '4px 8px', marginBottom: '6px', fontFamily: 'monospace', color: '#c0392b' }}>
+                試したアカウント: {employeeNotFoundEmail}
+              </div>
+            )}
             <div style={{ color: '#4b5563', fontSize: '12px' }}>
-              システムに登録されているメールアドレスと同じGoogleアカウントでログインしてください。
-              不明な場合は管理者に連絡してください。
+              会社のメールアドレス（例: ○○@hakuto-k.jp）と紐づいたGoogleアカウントでログインしてください。
+              個人のGmailでは入れません。不明な場合は管理者に連絡してください。
             </div>
           </div>
         )}

@@ -9,6 +9,7 @@ interface AuthContextType {
   employee: Employee | null
   loading: boolean
   employeeNotFound: boolean
+  employeeNotFoundEmail: string | null
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
@@ -22,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [employee, setEmployee] = useState<Employee | null>(null)
   const [loading, setLoading] = useState(true)
   const [employeeNotFound, setEmployeeNotFound] = useState(false)
+  const [employeeNotFoundEmail, setEmployeeNotFoundEmail] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -85,11 +87,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // → メールアドレス不一致 or RLSブロック
         setEmployee(null)
         setEmployeeNotFound(true)
-        await supabase.auth.signOut()   // セッションを切ってログアウト
+        setEmployeeNotFoundEmail(userEmail)
+        await supabase.auth.signOut()
       }
     } else {
       setEmployee(null)
       setEmployeeNotFound(true)
+      setEmployeeNotFoundEmail(null)
       await supabase.auth.signOut()
     }
     setLoading(false)
@@ -114,7 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, user, employee, loading, employeeNotFound, signIn, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ session, user, employee, loading, employeeNotFound, employeeNotFoundEmail, signIn, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   )
