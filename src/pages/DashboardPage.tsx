@@ -128,8 +128,8 @@ export default function DashboardPage() {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontSize: '11px', color: '#6b7280', letterSpacing: '0.08em', marginBottom: '10px' }}>{label}</div>
-                <div style={{ fontSize: '28px', fontWeight: 600, color: '#111827' }}>{value}</div>
+                <div style={{ fontSize: '13px', color: '#374151', fontWeight: 500, marginBottom: '10px' }}>{label}</div>
+                <div style={{ fontSize: '30px', fontWeight: 700, color: '#111827' }}>{value}</div>
               </div>
               <Icon size={18} color={color} />
             </div>
@@ -170,7 +170,7 @@ export default function DashboardPage() {
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
           {/* 社員別進捗率 */}
           <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '20px 24px' }}>
-            <div style={{ fontSize: '11px', color: '#6b7280', letterSpacing: '0.08em', marginBottom: '16px' }}>社員別進捗率</div>
+            <div style={{ fontSize: '13px', color: '#374151', fontWeight: 500, marginBottom: '16px' }}>社員別進捗率</div>
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={statsRows.map(({ emp, stats }) => ({ name: emp.name, rate: stats.rate }))} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f2f5" />
@@ -188,7 +188,7 @@ export default function DashboardPage() {
 
           {/* フェーズ別人数分布 */}
           <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '20px 24px' }}>
-            <div style={{ fontSize: '11px', color: '#6b7280', letterSpacing: '0.08em', marginBottom: '16px' }}>フェーズ別在籍人数</div>
+            <div style={{ fontSize: '13px', color: '#374151', fontWeight: 500, marginBottom: '16px' }}>フェーズ別在籍人数</div>
             <ResponsiveContainer width="100%" height={180}>
               <BarChart
                 data={[1,2,3,4].map(ph => ({
@@ -254,10 +254,10 @@ export default function DashboardPage() {
                 <th key={h} style={{
                   padding: '12px 16px',
                   textAlign: 'left',
-                  fontSize: '11px',
-                  color: '#9ca3af',
+                  fontSize: '12px',
+                  color: '#6b7280',
                   fontWeight: 600,
-                  letterSpacing: '0.08em',
+                  letterSpacing: '0.05em',
                   whiteSpace: 'nowrap',
                 }}>{h}</th>
               ))}

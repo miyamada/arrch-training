@@ -50,8 +50,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* ロゴ */}
       <div style={{ padding: '28px 24px 24px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ fontSize: '16px', fontWeight: 700, color: '#c8a96a', letterSpacing: '0.15em' }}>ARRCH</div>
-          <div style={{ fontSize: '10px', color: '#9ca3af', letterSpacing: '0.1em', marginTop: '4px' }}>育成カリキュラム管理</div>
+          <img src="/arrch-logo.png" alt="ARRCH" style={{ height: '36px', objectFit: 'contain', display: 'block' }} />
+          <div style={{ fontSize: '10px', color: '#9ca3af', letterSpacing: '0.1em', marginTop: '5px' }}>育成カリキュラム管理</div>
         </div>
         {isMobile && (
           <button onClick={() => setSidebarOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: '4px' }}>

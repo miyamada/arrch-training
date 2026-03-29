@@ -9,6 +9,7 @@ interface AuthContextType {
   employee: Employee | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
+  signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -25,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchEmployee(session.user.id)
+        fetchEmployee(session.user.id, session.user.email)
       } else {
         setLoading(false)
       }
@@ -35,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchEmployee(session.user.id)
+        fetchEmployee(session.user.id, session.user.email)
       } else {
         setEmployee(null)
         setLoading(false)
@@ -45,13 +46,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  async function fetchEmployee(userId: string) {
+  async function fetchEmployee(userId: string, userEmail?: string | null) {
+    // まずIDで検索（通常のパスワードログイン）
     const { data } = await supabase
       .from('employees')
       .select('*')
       .eq('id', userId)
       .single()
-    setEmployee(data)
+
+    if (data) {
+      setEmployee(data)
+      setLoading(false)
+      return
+    }
+
+    // Google SSOなどでIDが異なる場合はemailで検索
+    if (userEmail) {
+      const { data: byEmail } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('email', userEmail)
+        .single()
+      setEmployee(byEmail)
+    } else {
+      setEmployee(null)
+    }
     setLoading(false)
   }
 
@@ -60,12 +79,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error }
   }
 
+  async function signInWithGoogle() {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    })
+  }
+
   async function signOut() {
     await supabase.auth.signOut()
   }
 
   return (
-    <AuthContext.Provider value={{ session, user, employee, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user, employee, loading, signIn, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   )
