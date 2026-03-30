@@ -349,8 +349,6 @@ export default function EmployeeDetailPage() {
   // ゲーミフィケーション計算
   const badges = calcBadges(items, progress)
   const streak = calcStreak(progress)
-  const earnedBadges = badges.filter(b => b.earned)
-
   // prevRateRef初期化（loading完了時に一度だけ）
   if (prevRateRef.current === 0 && rate > 0 && !milestone) {
     prevRateRef.current = rate
