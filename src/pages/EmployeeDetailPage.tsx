@@ -8,6 +8,7 @@ import { ja } from 'date-fns/locale'
 import { Star, Video, User, BookOpen, Wrench, ExternalLink, MessageSquare, ChevronLeft, ChevronRight as ChevronRightIcon, Calendar, CheckCircle, FileText, Save, Bot, Flame, Trophy } from 'lucide-react'
 import { Breadcrumb } from '../components/Layout'
 import AiChat from '../components/AiChat'
+import AiSummary from '../components/AiSummary'
 import type { DailyReport } from '../types/database'
 import { calcBadges, calcStreak, getNewMilestones } from '../utils/gamification'
 
@@ -193,7 +194,7 @@ export default function EmployeeDetailPage() {
   const [items, setItems] = useState<CurriculumItem[]>([])
   const [progress, setProgress] = useState<ProgressRecord[]>([])
   const [admins, setAdmins] = useState<Employee[]>([])
-  const [activePhase, setActivePhase] = useState<number | 'calendar' | 'reports'>(1)
+  const [activePhase, setActivePhase] = useState<number | 'calendar' | 'reports' | 'ai'>(1)
   const [reports, setReports] = useState<DailyReport[]>([])
   const [reportForm, setReportForm] = useState({ goal_and_achievement: '', learned_today: '', tomorrow_goal: '' })
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'))
@@ -571,7 +572,28 @@ export default function EmployeeDetailPage() {
             }}>{reports.length}</span>
           )}
         </button>
+        {isAdmin && (
+          <button onClick={() => setActivePhase('ai')} style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            padding: '10px 18px', fontSize: '13px', fontWeight: activePhase === 'ai' ? 700 : 400,
+            whiteSpace: 'nowrap', cursor: 'pointer',
+            background: activePhase === 'ai' ? '#c8a96a' : '#ffffff',
+            color: activePhase === 'ai' ? '#ffffff' : '#4b5563',
+            border: activePhase === 'ai' ? '1px solid #c8a96a' : '1px solid #d1d5db',
+            borderRadius: '8px',
+            boxShadow: activePhase === 'ai' ? '0 2px 8px rgba(200,169,106,0.3)' : 'none',
+            transition: 'all 0.15s', gap: '4px', minWidth: '80px',
+          }}>
+            <Bot size={15} />
+            <span style={{ fontSize: '11px', marginTop: '2px' }}>AIサマリー</span>
+          </button>
+        )}
       </div>
+
+      {/* AIサマリービュー */}
+      {activePhase === 'ai' && (
+        <AiSummary emp={emp} items={items} progress={progress} reports={reports} />
+      )}
 
       {/* カレンダービュー */}
       {activePhase === 'calendar' && (
