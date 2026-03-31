@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import { Loader, RefreshCw, FileBarChart2, TrendingUp, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import { format, parseISO, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import type { Employee, CurriculumItem, ProgressRecord, DailyReport } from '../types/database'
-
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY ?? '')
 
 interface KeywordItem { word: string; count: number; context: string }
 interface KeywordAnalysis {
@@ -32,10 +29,18 @@ interface Props {
   reports: DailyReport[]
 }
 
-async function callGemini(prompt: string): Promise<string> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
-  const result = await model.generateContent(prompt)
-  return result.response.text().trim().replace(/^```json\s*/,'').replace(/\s*```$/,'')
+async function callAI(prompt: string): Promise<string> {
+  const res = await fetch('/api/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'analyze', prompt }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error ?? `HTTP ${res.status}`)
+  }
+  const { text } = await res.json()
+  return text.trim().replace(/^```json\s*/,'').replace(/\s*```$/,'')
 }
 
 export default function AiSummary({ emp, items, progress, reports }: Props) {
@@ -68,7 +73,7 @@ ${recentText}
 {"keywords":[{"word":"単語","count":出現回数,"context":"使われ方の説明"}],"quality_score":1〜10の整数,"quality_comment":"スコアの理由を1〜2文","themes":["テーマ1","テーマ2","テーマ3"],"recommendation":"管理者へのアドバイスを2〜3文"}
 keywordsは重要な単語を出現の多い順に最大8件。`
 
-      const text = await callGemini(prompt)
+      const text = await callAI(prompt)
       setAnalysis(JSON.parse(text))
     } catch (e) {
       setAnalysisError(e instanceof Error ? e.message : String(e))
@@ -109,7 +114,7 @@ ${reportsText}
 以下のJSONのみを返してください（説明文・\`\`\`不要）:
 {"week_range":"${weekRange}","completed_count":${completedNames.length},"completed_items":${JSON.stringify(completedNames)},"report_quality":"今週の日報の質を1〜2文で評価","key_learnings":"今週の重要な学びを2〜3文","concerns":"気になる点を1〜2文（なければ特になし）","next_focus":"来週のフォーカスポイントを1〜2文"}`
 
-      const text = await callGemini(prompt)
+      const text = await callAI(prompt)
       setWeekly(JSON.parse(text))
       setWeeklyOpen(true)
     } catch (e) {

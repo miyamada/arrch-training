@@ -1,10 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import { Bot, X, Send, Loader } from 'lucide-react'
 import type { Employee, CurriculumItem, ProgressRecord, DailyReport } from '../types/database'
 import { parseISO, differenceInDays } from 'date-fns'
-
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY ?? '')
 
 interface Message {
   role: 'user' | 'model'
@@ -16,7 +13,6 @@ interface Props {
   items: CurriculumItem[]
   progress: ProgressRecord[]
   reports: DailyReport[]
-  /** 外部から開閉を制御する場合に渡す */
   open?: boolean
   onClose?: () => void
 }
@@ -28,7 +24,6 @@ function buildSystemContext(emp: Employee, items: CurriculumItem[], progress: Pr
   const total = items.length
   const rate = total > 0 ? Math.round((completed / total) * 100) : 0
 
-  // 遅延項目
   const delayed = progress.filter(p => !p.is_completed && p.planned_date && differenceInDays(today, parseISO(p.planned_date)) > 0)
   const delayedItems = delayed.map(p => {
     const item = items.find(i => i.id === p.item_id)
@@ -36,14 +31,12 @@ function buildSystemContext(emp: Employee, items: CurriculumItem[], progress: Pr
     return `「${item?.content ?? '不明'}」（${days}日遅れ）`
   })
 
-  // フェーズ別進捗
   const phaseStats = [1, 2, 3, 4].map(ph => {
     const phItems = items.filter(i => i.phase === ph)
     const done = phItems.filter(i => progress.find(p => p.item_id === i.id && p.is_completed)).length
     return `フェーズ${ph}: ${done}/${phItems.length}完了`
   }).join('、')
 
-  // 直近10件の日報
   const recentReports = reports.slice(0, 10).map(r =>
     `【${r.report_date}】\n目標と達成度: ${r.goal_and_achievement || '未記入'}\n学んだこと: ${r.learned_today || '未記入'}\n明日の目標: ${r.tomorrow_goal || '未記入'}`
   ).join('\n\n')
@@ -71,93 +64,85 @@ export default function AiChat({ emp, items, progress, reports, open: openProp, 
   const isControlled = openProp !== undefined
   const open = isControlled ? openProp! : openInternal
 
-  function handleOpen() {
-    if (!isControlled) setOpenInternal(true)
-  }
-  function handleClose() {
-    if (isControlled) { onClose?.() } else { setOpenInternal(false) }
-  }
+  function handleOpen() { if (!isControlled) setOpenInternal(true) }
+  function handleClose() { if (isControlled) { onClose?.() } else { setOpenInternal(false) } }
+
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [chatSession, setChatSession] = useState<ReturnType<ReturnType<typeof genAI.getGenerativeModel>['startChat']> | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  // チャット開いたときにセッション初期化
   useEffect(() => {
-    if (!open || chatSession) return
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      systemInstruction: buildSystemContext(emp, items, progress, reports),
-    })
-    const session = model.startChat({ history: [] })
-    setChatSession(session)
-    // 最初のメッセージ
+    if (!open) return
     setMessages([{
       role: 'model',
       text: `${emp.name}さんについてご相談ください。進捗状況や日報の内容をもとにアドバイスします。`,
     }])
-  }, [open])
+  }, [open, emp.name])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
   async function sendMessage() {
-    if (!input.trim() || !chatSession || loading) return
+    if (!input.trim() || loading) return
     const userText = input.trim()
     setInput('')
-    setMessages(prev => [...prev, { role: 'user', text: userText }])
+    const nextMessages: Message[] = [...messages, { role: 'user', text: userText }]
+    setMessages(nextMessages)
     setLoading(true)
     try {
-      const result = await chatSession.sendMessage(userText)
-      const text = result.response.text()
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'chat',
+          systemContext: buildSystemContext(emp, items, progress, reports),
+          messages: nextMessages,
+        }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const { text } = await res.json()
       setMessages(prev => [...prev, { role: 'model', text }])
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
-      const isQuota = msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('retry')
-      const userMsg = isQuota
-        ? 'リクエストが集中しています。数秒待ってから再度お試しください。'
-        : 'エラーが発生しました。もう一度お試しください。'
-      setMessages(prev => [...prev, { role: 'model', text: userMsg }])
+      const isQuota = msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED')
+      setMessages(prev => [...prev, {
+        role: 'model',
+        text: isQuota
+          ? 'リクエストが集中しています。数秒待ってから再度お試しください。'
+          : 'エラーが発生しました。もう一度お試しください。',
+      }])
     }
     setLoading(false)
   }
 
   return (
     <>
-      {/* 外部制御でない場合のみフローティングボタンを表示 */}
       {!isControlled && (
-        <button
-          onClick={handleOpen}
-          style={{
-            position: 'fixed', bottom: '24px', right: '24px', zIndex: 100,
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '12px 20px', background: '#c8a96a', color: '#ffffff',
-            border: 'none', borderRadius: '28px', fontSize: '13px', fontWeight: 600,
-            cursor: 'pointer', boxShadow: '0 4px 16px rgba(200,169,106,0.4)',
-          }}
-        >
+        <button onClick={handleOpen} style={{
+          position: 'fixed', bottom: '24px', right: '24px', zIndex: 100,
+          display: 'flex', alignItems: 'center', gap: '8px',
+          padding: '12px 20px', background: '#c8a96a', color: '#ffffff',
+          border: 'none', borderRadius: '28px', fontSize: '13px', fontWeight: 600,
+          cursor: 'pointer', boxShadow: '0 4px 16px rgba(200,169,106,0.4)',
+        }}>
           <Bot size={16} /> AI に相談
         </button>
       )}
 
-      {/* チャットパネル */}
       {open && (
         <div style={{
           position: 'fixed',
-          bottom: '16px',
-          right: '16px',
+          bottom: '16px', right: '16px',
           left: window.innerWidth < 768 ? '16px' : 'auto',
           zIndex: 100,
           width: window.innerWidth < 768 ? 'auto' : '380px',
           height: '520px',
           background: '#ffffff', border: '1px solid #d1d5db', borderRadius: '12px',
           boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-          display: 'flex', flexDirection: 'column',
-          overflow: 'hidden',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}>
-          {/* ヘッダー */}
           <div style={{
             padding: '14px 16px', borderBottom: '1px solid #d1d5db',
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -172,21 +157,15 @@ export default function AiChat({ emp, items, progress, reports, open: openProp, 
             </button>
           </div>
 
-          {/* メッセージ一覧 */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {messages.map((msg, i) => (
-              <div key={i} style={{
-                display: 'flex',
-                justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-              }}>
+              <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                 <div style={{
-                  maxWidth: '85%',
-                  padding: '10px 14px',
+                  maxWidth: '85%', padding: '10px 14px',
                   borderRadius: msg.role === 'user' ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
                   background: msg.role === 'user' ? '#c8a96a' : '#eef0f3',
                   color: msg.role === 'user' ? '#ffffff' : '#111827',
-                  fontSize: '12px', lineHeight: 1.6,
-                  whiteSpace: 'pre-wrap',
+                  fontSize: '12px', lineHeight: 1.6, whiteSpace: 'pre-wrap',
                   border: msg.role === 'model' ? '1px solid #d1d5db' : 'none',
                 }}>
                   {msg.text}
@@ -201,7 +180,6 @@ export default function AiChat({ emp, items, progress, reports, open: openProp, 
             <div ref={bottomRef} />
           </div>
 
-          {/* 入力欄 */}
           <div style={{ padding: '12px', borderTop: '1px solid #d1d5db', display: 'flex', gap: '8px' }}>
             <input
               value={input}
@@ -215,7 +193,8 @@ export default function AiChat({ emp, items, progress, reports, open: openProp, 
               }}
             />
             <button onClick={sendMessage} disabled={loading || !input.trim()} style={{
-              padding: '8px 12px', background: loading || !input.trim() ? '#d1d5db' : '#c8a96a',
+              padding: '8px 12px',
+              background: loading || !input.trim() ? '#d1d5db' : '#c8a96a',
               color: loading || !input.trim() ? '#6b7280' : '#ffffff',
               border: 'none', borderRadius: '6px', cursor: loading ? 'not-allowed' : 'pointer',
               display: 'flex', alignItems: 'center',
