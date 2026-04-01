@@ -46,7 +46,11 @@ export default async function handler(req: any, res: any) {
       })
 
       // 直前までの履歴をセット
-      const history = chatMessages.slice(0, -1).map((m: ChatMessage) => ({
+      // Gemini API は履歴が必ず 'user' ロールから始まる必要があるため、
+      // 初回の挨拶など先頭の 'model' メッセージを除去する
+      const historyRaw = chatMessages.slice(0, -1)
+      const firstUserIdx = historyRaw.findIndex((m: ChatMessage) => m.role === 'user')
+      const history = (firstUserIdx >= 0 ? historyRaw.slice(firstUserIdx) : []).map((m: ChatMessage) => ({
         role: m.role,
         parts: [{ text: m.text }],
       }))
