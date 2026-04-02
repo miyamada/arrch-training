@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import type { Employee, CurriculumItem, ProgressRecord, ProgressComment } from '../types/database'
 import { differenceInDays, parseISO, format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay } from 'date-fns'
 import { ja } from 'date-fns/locale'
-import { Star, Video, User, BookOpen, Wrench, ExternalLink, MessageSquare, ChevronLeft, ChevronRight as ChevronRightIcon, Calendar, CheckCircle, FileText, Save, Bot, Flame, Trophy } from 'lucide-react'
+import { Star, Video, User, BookOpen, Wrench, ExternalLink, MessageSquare, ChevronLeft, ChevronRight as ChevronRightIcon, Calendar, CheckCircle, FileText, Save, Bot, Flame, Trophy, Camera } from 'lucide-react'
 import { Breadcrumb } from '../components/Layout'
 import AiChat from '../components/AiChat'
 import AiSummary from '../components/AiSummary'
@@ -206,6 +206,8 @@ export default function EmployeeDetailPage() {
   const [milestone, setMilestone] = useState<{ type: 'rate' | 'phase'; value: number } | null>(null)
   const prevRateRef = useRef<number>(0)
   const prevPhasesRef = useRef<number[]>([])
+  const [photoUploading, setPhotoUploading] = useState(false)
+  const photoInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     function onResize() { setIsMobile(window.innerWidth < 768) }
@@ -286,6 +288,19 @@ export default function EmployeeDetailPage() {
       .update({ [field]: value || null })
       .eq('id', rec.id).select().single()
     if (data) setProgress(prev => prev.map(p => p.id === rec.id ? data : p))
+  }
+
+  async function uploadPhoto(file: File) {
+    if (!emp) return
+    setPhotoUploading(true)
+    const ext = file.name.split('.').pop()
+    const path = `${emp.id}.${ext}`
+    const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
+    if (uploadError) { setPhotoUploading(false); return }
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
+    await supabase.from('employees').update({ photo_url: publicUrl }).eq('id', emp.id)
+    setEmp(prev => prev ? { ...prev, photo_url: publicUrl } : prev)
+    setPhotoUploading(false)
   }
 
   async function saveReport() {
@@ -418,16 +433,57 @@ export default function EmployeeDetailPage() {
       {/* ヘッダー */}
       <div style={{ background: '#ffffff', border: '1px solid #d1d5db', borderRadius: '4px', padding: '24px 28px', marginBottom: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <h1 style={{ fontSize: '22px', fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>{emp.name}</h1>
-            <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px' }}>
-              入社日: {format(parseISO(emp.joined_at), 'yyyy年M月d日')}
-            </div>
-            {mentor && (
-              <div style={{ fontSize: '12px', color: '#4b5563' }}>
-                担当メンター: <span style={{ color: '#c8a96a' }}>{mentor.name}</span>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+            {/* プロフィール写真 */}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <div style={{
+                width: '72px', height: '72px', borderRadius: '50%',
+                background: '#eef0f3', border: '2px solid #d1d5db',
+                overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {emp.photo_url
+                  ? <img src={emp.photo_url} alt={emp.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <User size={32} color="#9ca3af" />
+                }
               </div>
-            )}
+              {(isAdmin || me?.id === targetId) && (
+                <>
+                  <button
+                    onClick={() => photoInputRef.current?.click()}
+                    disabled={photoUploading}
+                    title="写真をアップロード"
+                    style={{
+                      position: 'absolute', bottom: 0, right: 0,
+                      width: '24px', height: '24px', borderRadius: '50%',
+                      background: '#c8a96a', border: '2px solid #fff',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: photoUploading ? 'not-allowed' : 'pointer',
+                      opacity: photoUploading ? 0.6 : 1,
+                    }}
+                  >
+                    <Camera size={12} color="#fff" />
+                  </button>
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={e => { const f = e.target.files?.[0]; if (f) uploadPhoto(f) }}
+                  />
+                </>
+              )}
+            </div>
+            <div>
+              <h1 style={{ fontSize: '22px', fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>{emp.name}</h1>
+              <div style={{ fontSize: '12px', color: '#4b5563', marginBottom: '4px' }}>
+                入社日: {format(parseISO(emp.joined_at), 'yyyy年M月d日')}
+              </div>
+              {mentor && (
+                <div style={{ fontSize: '12px', color: '#4b5563' }}>
+                  担当メンター: <span style={{ color: '#c8a96a' }}>{mentor.name}</span>
+                </div>
+              )}
+            </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
             <div style={{ textAlign: 'right' }}>
@@ -747,9 +803,9 @@ export default function EmployeeDetailPage() {
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: isMobile ? '8px' : '12px', marginTop: '8px' }}>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#6b7280' }}>
                         予定日:
-                        <input type="date" disabled={!isAdmin} value={rec?.planned_date ?? ''}
+                        <input type="date" value={rec?.planned_date ?? ''}
                           onChange={e => updateField(item.id, 'planned_date', e.target.value)}
-                          style={{ background: '#eef0f3', border: '1px solid #d1d5db', borderRadius: '2px', color: isDelayed ? '#e05454' : '#4b5563', fontSize: '11px', padding: '2px 6px', cursor: isAdmin ? 'pointer' : 'not-allowed', opacity: isAdmin ? 1 : 0.6 }} />
+                          style={{ background: '#eef0f3', border: '1px solid #d1d5db', borderRadius: '2px', color: isDelayed ? '#e05454' : '#4b5563', fontSize: '11px', padding: '2px 6px', cursor: 'pointer' }} />
                       </label>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#6b7280' }}>
                         担当者:

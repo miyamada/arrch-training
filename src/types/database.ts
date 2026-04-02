@@ -17,6 +17,7 @@ export interface Database {
           role: 'admin' | 'trainee'
           joined_at: string
           mentor_id: string | null
+          photo_url: string | null
           created_at: string
         }
         Insert: {
@@ -26,6 +27,7 @@ export interface Database {
           role: 'admin' | 'trainee'
           joined_at: string
           mentor_id?: string | null
+          photo_url?: string | null
           created_at?: string
         }
         Update: {
@@ -35,6 +37,7 @@ export interface Database {
           role?: 'admin' | 'trainee'
           joined_at?: string
           mentor_id?: string | null
+          photo_url?: string | null
           created_at?: string
         }
       }
