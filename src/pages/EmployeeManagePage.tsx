@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Employee } from '../types/database'
 import { format, parseISO } from 'date-fns'
-import { Plus, X, Pencil } from 'lucide-react'
+import { Plus, X, Pencil, Camera, User } from 'lucide-react'
 import { Breadcrumb } from '../components/Layout'
 
 export default function EmployeeManagePage() {
@@ -20,6 +20,29 @@ export default function EmployeeManagePage() {
   const [editForm, setEditForm] = useState({ name: '', joined_at: '', mentor_id: '', role: 'trainee' as 'admin' | 'trainee' })
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState('')
+
+  // 写真アップロード
+  const [uploadingId, setUploadingId] = useState<string | null>(null)
+  const photoInputRef = useRef<HTMLInputElement>(null)
+  const photoTargetRef = useRef<string | null>(null)
+
+  async function uploadPhoto(empId: string, file: File) {
+    setUploadingId(empId)
+    const ext = file.name.split('.').pop()
+    const path = `${empId}.${ext}`
+    const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
+    if (!uploadError) {
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
+      await supabase.from('employees').update({ photo_url: publicUrl }).eq('id', empId)
+      setEmployees(prev => prev.map(e => e.id === empId ? { ...e, photo_url: publicUrl } : e))
+    }
+    setUploadingId(null)
+  }
+
+  function triggerPhotoUpload(empId: string) {
+    photoTargetRef.current = empId
+    photoInputRef.current?.click()
+  }
 
   async function load() {
     const { data } = await supabase.from('employees').select('*').order('joined_at', { ascending: false })
@@ -113,6 +136,17 @@ export default function EmployeeManagePage() {
 
   return (
     <div style={{ padding: '24px 40px' }}>
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={e => {
+          const f = e.target.files?.[0]
+          if (f && photoTargetRef.current) uploadPhoto(photoTargetRef.current, f)
+          e.target.value = ''
+        }}
+      />
       <Breadcrumb items={[{ label: 'ダッシュボード', to: '/' }, { label: '社員管理' }]} />
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -271,8 +305,8 @@ export default function EmployeeManagePage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid #d1d5db', background: '#eef0f3' }}>
-                  {['名前', 'メール', '入社日', 'メンター', ''].map(h => (
-                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', color: '#6b7280', fontWeight: 600 }}>{h}</th>
+                  {['', '名前', 'メール', '入社日', 'メンター', ''].map((h, i) => (
+                    <th key={i} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', color: '#6b7280', fontWeight: 600 }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -281,6 +315,23 @@ export default function EmployeeManagePage() {
                   const m = employees.find(e => e.id === emp.mentor_id)
                   return (
                     <tr key={emp.id} style={{ borderBottom: i < trainees.length - 1 ? '1px solid #d1d5db' : 'none' }}>
+                      <td style={{ padding: '8px 8px 8px 16px', width: '48px' }}>
+                        <div style={{ position: 'relative', width: '36px', height: '36px' }}>
+                          <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#eef0f3', border: '1px solid #d1d5db', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {emp.photo_url
+                              ? <img src={emp.photo_url} alt={emp.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              : <User size={18} color="#9ca3af" />}
+                          </div>
+                          <button
+                            onClick={() => triggerPhotoUpload(emp.id)}
+                            disabled={uploadingId === emp.id}
+                            title="写真をアップロード"
+                            style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '16px', height: '16px', borderRadius: '50%', background: '#c8a96a', border: '1.5px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}
+                          >
+                            <Camera size={9} color="#fff" />
+                          </button>
+                        </div>
+                      </td>
                       <td style={{ padding: '12px 16px', color: '#111827' }}>{emp.name}</td>
                       <td style={{ padding: '12px 16px', color: '#4b5563' }}>{emp.email}</td>
                       <td style={{ padding: '12px 16px', color: '#4b5563' }}>{format(parseISO(emp.joined_at), 'yyyy/MM/dd')}</td>
@@ -308,14 +359,31 @@ export default function EmployeeManagePage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid #d1d5db', background: '#eef0f3' }}>
-                {['名前', 'メール', ''].map(h => (
-                  <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', color: '#6b7280', fontWeight: 600 }}>{h}</th>
+                {['', '名前', 'メール', ''].map((h, i) => (
+                  <th key={i} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', color: '#6b7280', fontWeight: 600 }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {admins.map((emp, i) => (
                 <tr key={emp.id} style={{ borderBottom: i < admins.length - 1 ? '1px solid #d1d5db' : 'none' }}>
+                  <td style={{ padding: '8px 8px 8px 16px', width: '48px' }}>
+                    <div style={{ position: 'relative', width: '36px', height: '36px' }}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#eef0f3', border: '1px solid #d1d5db', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {emp.photo_url
+                          ? <img src={emp.photo_url} alt={emp.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          : <User size={18} color="#9ca3af" />}
+                      </div>
+                      <button
+                        onClick={() => triggerPhotoUpload(emp.id)}
+                        disabled={uploadingId === emp.id}
+                        title="写真をアップロード"
+                        style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '16px', height: '16px', borderRadius: '50%', background: '#c8a96a', border: '1.5px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}
+                      >
+                        <Camera size={9} color="#fff" />
+                      </button>
+                    </div>
+                  </td>
                   <td style={{ padding: '12px 16px', color: '#111827' }}>{emp.name}</td>
                   <td style={{ padding: '12px 16px', color: '#4b5563' }}>{emp.email}</td>
                   <td style={{ padding: '12px 16px' }}>
