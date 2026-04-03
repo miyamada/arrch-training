@@ -242,8 +242,23 @@ export default function EmployeeDetailPage() {
     load()
   }, [targetId])
 
+  async function ensureRecord(itemId: string): Promise<ProgressRecord | null> {
+    if (!targetId) return null
+    const existing = progress.find(p => p.item_id === itemId)
+    if (existing) return existing
+    const { data } = await supabase
+      .from('progress_records')
+      .insert({ employee_id: targetId, item_id: itemId, is_completed: false })
+      .select().single()
+    if (data) {
+      setProgress(prev => [...prev, data])
+      return data
+    }
+    return null
+  }
+
   async function toggleComplete(itemId: string) {
-    const rec = progress.find(p => p.item_id === itemId)
+    const rec = await ensureRecord(itemId)
     if (!rec) return
     const nowCompleted = !rec.is_completed
     const { data } = await supabase
@@ -271,8 +286,9 @@ export default function EmployeeDetailPage() {
   }
 
   async function toggleTestPassed(itemId: string) {
-    const rec = progress.find(p => p.item_id === itemId)
-    if (!rec || !isAdmin) return
+    if (!isAdmin) return
+    const rec = await ensureRecord(itemId)
+    if (!rec) return
     const nowPassed = !rec.is_test_passed
     const { data } = await supabase
       .from('progress_records')
@@ -282,7 +298,7 @@ export default function EmployeeDetailPage() {
   }
 
   async function updateField(itemId: string, field: 'planned_date' | 'trainer_name' | 'memo', value: string) {
-    const rec = progress.find(p => p.item_id === itemId)
+    const rec = await ensureRecord(itemId)
     if (!rec) return
     const { data } = await supabase
       .from('progress_records')
