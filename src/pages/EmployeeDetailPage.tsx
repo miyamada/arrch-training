@@ -208,6 +208,7 @@ export default function EmployeeDetailPage() {
   const prevPhasesRef = useRef<number[]>([])
   const [photoUploading, setPhotoUploading] = useState(false)
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const [memoEdits, setMemoEdits] = useState<Record<string, string>>({})
 
   useEffect(() => {
     function onResize() { setIsMobile(window.innerWidth < 768) }
@@ -824,8 +825,17 @@ export default function EmployeeDetailPage() {
                       </label>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#6b7280' }}>
                         メモ:
-                        <input type="text" disabled={!isAdmin} value={rec?.memo ?? ''} onChange={e => updateField(item.id, 'memo', e.target.value)} placeholder="メモ"
-                          style={{ background: '#eef0f3', border: '1px solid #d1d5db', borderRadius: '2px', color: '#4b5563', fontSize: '11px', padding: '2px 6px', width: '160px', cursor: isAdmin ? 'text' : 'not-allowed', opacity: isAdmin ? 1 : 0.6 }} />
+                        <input
+                          type="text"
+                          value={memoEdits[item.id] ?? rec?.memo ?? ''}
+                          onChange={e => setMemoEdits(prev => ({ ...prev, [item.id]: e.target.value }))}
+                          onBlur={e => {
+                            updateField(item.id, 'memo', e.target.value)
+                            setMemoEdits(prev => { const n = { ...prev }; delete n[item.id]; return n })
+                          }}
+                          placeholder="メモ"
+                          style={{ background: '#eef0f3', border: '1px solid #d1d5db', borderRadius: '2px', color: '#4b5563', fontSize: '11px', padding: '2px 6px', width: '160px', cursor: 'text' }}
+                        />
                       </label>
                       {rec && (
                         <button onClick={() => toggleComment(rec.id)} style={{
