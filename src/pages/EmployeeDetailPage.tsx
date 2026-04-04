@@ -229,36 +229,42 @@ export default function EmployeeDetailPage() {
         supabase.from('daily_reports').select('*').eq('employee_id', targetId!).order('report_date', { ascending: false }),
       ])
       setEmp(empData)
-      setItems(currItems ?? [])
-      setProgress(prog ?? [])
       setAdmins(adminData ?? [])
       setReports(reportData ?? [])
       if (empData?.mentor_id) {
         const { data: m } = await supabase.from('employees').select('*').eq('id', empData.mentor_id).single()
         setMentor(m)
       }
+
+      // 欠損レコードを一括作成（全フェーズ対応）
+      const allItems = currItems ?? []
+      let allProgress = prog ?? []
+      const existingItemIds = new Set(allProgress.map((p) => p.item_id))
+      const missingItems = allItems.filter((item) => !existingItemIds.has(item.id))
+      if (missingItems.length > 0) {
+        const inserts = missingItems.map((item) => ({
+          employee_id: targetId!,
+          item_id: item.id,
+          is_completed: false,
+        }))
+        const { data: newRecs } = await supabase
+          .from('progress_records')
+          .insert(inserts)
+          .select()
+        if (newRecs && newRecs.length > 0) {
+          allProgress = [...allProgress, ...newRecs]
+        }
+      }
+
+      setItems(allItems)
+      setProgress(allProgress)
       setLoading(false)
     }
     load()
   }, [targetId])
 
-  async function ensureRecord(itemId: string): Promise<ProgressRecord | null> {
-    if (!targetId) return null
-    const existing = progress.find(p => p.item_id === itemId)
-    if (existing) return existing
-    const { data } = await supabase
-      .from('progress_records')
-      .insert({ employee_id: targetId, item_id: itemId, is_completed: false })
-      .select().single()
-    if (data) {
-      setProgress(prev => [...prev, data])
-      return data
-    }
-    return null
-  }
-
   async function toggleComplete(itemId: string) {
-    const rec = await ensureRecord(itemId)
+    const rec = progress.find(p => p.item_id === itemId)
     if (!rec) return
     const nowCompleted = !rec.is_completed
     const { data } = await supabase
@@ -287,7 +293,7 @@ export default function EmployeeDetailPage() {
 
   async function toggleTestPassed(itemId: string) {
     if (!isAdmin) return
-    const rec = await ensureRecord(itemId)
+    const rec = progress.find(p => p.item_id === itemId)
     if (!rec) return
     const nowPassed = !rec.is_test_passed
     const { data } = await supabase
@@ -298,7 +304,7 @@ export default function EmployeeDetailPage() {
   }
 
   async function updateField(itemId: string, field: 'planned_date' | 'trainer_name' | 'memo', value: string) {
-    const rec = await ensureRecord(itemId)
+    const rec = progress.find(p => p.item_id === itemId)
     if (!rec) return
     const { data } = await supabase
       .from('progress_records')
