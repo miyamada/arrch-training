@@ -6,6 +6,7 @@ import { differenceInDays, parseISO } from 'date-fns'
 import { AlertTriangle, Users, TrendingUp, Clock, BookOpen, ChevronRight } from 'lucide-react'
 import { Breadcrumb } from '../components/Layout'
 import { calcBadges } from '../utils/gamification'
+import CurriculumOverview from '../components/CurriculumOverview'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
@@ -238,6 +239,11 @@ export default function DashboardPage() {
             </button>
           )
         })}
+      </div>
+
+      {/* 育成カリキュラム全体像 */}
+      <div style={{ marginBottom: '24px' }}>
+        <CurriculumOverview />
       </div>
 
       {/* 社員進捗テーブル */}
