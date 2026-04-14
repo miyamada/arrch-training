@@ -5,10 +5,11 @@ import { useAuth } from '../contexts/AuthContext'
 import type { Employee, CurriculumItem, ProgressRecord, ProgressComment } from '../types/database'
 import { differenceInDays, parseISO, format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay } from 'date-fns'
 import { ja } from 'date-fns/locale'
-import { Star, Video, User, BookOpen, Wrench, ExternalLink, MessageSquare, ChevronLeft, ChevronRight as ChevronRightIcon, Calendar, CheckCircle, FileText, Save, Bot, Flame, Trophy, Camera } from 'lucide-react'
+import { Star, Video, User, BookOpen, Wrench, ExternalLink, MessageSquare, ChevronLeft, ChevronRight as ChevronRightIcon, Calendar, CheckCircle, FileText, Save, Bot, Flame, Trophy, Camera, Map } from 'lucide-react'
 import { Breadcrumb } from '../components/Layout'
 import AiChat from '../components/AiChat'
 import AiSummary from '../components/AiSummary'
+import CurriculumOverview from '../components/CurriculumOverview'
 import type { DailyReport } from '../types/database'
 import { calcBadges, calcStreak, getNewMilestones } from '../utils/gamification'
 
@@ -194,7 +195,7 @@ export default function EmployeeDetailPage() {
   const [items, setItems] = useState<CurriculumItem[]>([])
   const [progress, setProgress] = useState<ProgressRecord[]>([])
   const [admins, setAdmins] = useState<Employee[]>([])
-  const [activePhase, setActivePhase] = useState<number | 'calendar' | 'reports' | 'ai'>(1)
+  const [activePhase, setActivePhase] = useState<number | 'overview' | 'calendar' | 'reports' | 'ai'>('overview')
   const [reports, setReports] = useState<DailyReport[]>([])
   const [reportForm, setReportForm] = useState({ goal_and_achievement: '', learned_today: '', tomorrow_goal: '' })
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'))
@@ -592,6 +593,20 @@ export default function EmployeeDetailPage() {
 
       {/* タブ */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '2px' }}>
+        <button onClick={() => setActivePhase('overview')} style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: '10px 18px', fontSize: '13px', fontWeight: activePhase === 'overview' ? 700 : 400,
+          whiteSpace: 'nowrap', cursor: 'pointer',
+          background: activePhase === 'overview' ? '#c8a96a' : '#ffffff',
+          color: activePhase === 'overview' ? '#ffffff' : '#4b5563',
+          border: activePhase === 'overview' ? '1px solid #c8a96a' : '1px solid #d1d5db',
+          borderRadius: '8px',
+          boxShadow: activePhase === 'overview' ? '0 2px 8px rgba(200,169,106,0.3)' : 'none',
+          transition: 'all 0.15s', gap: '4px', minWidth: '80px',
+        }}>
+          <Map size={15} />
+          <span style={{ fontSize: '11px', marginTop: '2px' }}>全体像</span>
+        </button>
         {([1, 2, 3, 4] as const).map(ph => {
           const isActive = activePhase === ph
           const phStat = phaseStats.find(s => s.phase === ph)
@@ -668,6 +683,11 @@ export default function EmployeeDetailPage() {
           </button>
         )}
       </div>
+
+      {/* 全体像ビュー */}
+      {activePhase === 'overview' && (
+        <CurriculumOverview />
+      )}
 
       {/* AIサマリービュー */}
       {activePhase === 'ai' && (
